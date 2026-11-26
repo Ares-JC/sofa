@@ -8,6 +8,7 @@ import { CACHE_DIR } from "@sofa/config";
 import { createBackup, ensureBackupDir } from "@sofa/core/backup";
 import { recoverInterruptedCronRuns } from "@sofa/core/cron";
 import { ensureImageDirs, imageCacheEnabled } from "@sofa/core/image-cache";
+import { applyMetadataLanguage } from "@sofa/core/metadata-language";
 import { registerJobScheduleProvider } from "@sofa/core/system-health";
 import { closeDatabase, isDatabaseAccessBlocked } from "@sofa/db/client";
 import { hasPendingMigrations, runMigrations } from "@sofa/db/migrate";
@@ -50,6 +51,7 @@ runMigrations();
 
 // Seed streaming platforms (idempotent upsert)
 seedPlatforms();
+applyMetadataLanguage();
 
 // Recover import jobs left in running/pending state from a previous crash
 const recoveredJobs = recoverStaleImportJobs();

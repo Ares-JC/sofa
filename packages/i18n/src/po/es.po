@@ -4155,3 +4155,31 @@ msgstr "Arco argumental"
 #: apps/web/src/components/titles/season-order-menu.tsx
 msgid "Production"
 msgstr "Producción"
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Metadata language saved"
+msgstr "Idioma de la información guardado"
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Your library is updating in the background; other titles update when opened."
+msgstr "Tu biblioteca se está actualizando en segundo plano; los demás títulos se actualizan al abrirlos."
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Failed to save the metadata language"
+msgstr "No se pudo guardar el idioma de la información"
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Spanish (Spain)"
+msgstr "Español (España)"
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Spanish (Latin America)"
+msgstr "Español (Latinoamérica)"
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Metadata language"
+msgstr "Idioma de la información"
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Language for titles, synopses and episode names. When a translation is missing, the closest one is used, then English. Applies to every user."
+msgstr "Idioma de los títulos, sinopsis y nombres de episodios. Si falta una traducción, se usa la más cercana y luego el inglés. Se aplica a todos los usuarios."

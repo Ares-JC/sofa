@@ -243,6 +243,12 @@ export const CreateIntegrationInput = z
 
 // ─── Admin inputs ──────────────────────────────────────────────
 
+export const MetadataLanguageSchema = z
+  .enum(["en-US", "es-ES", "es-MX"])
+  .describe(
+    "Language for titles, overviews and episode names from TMDB (missing translations fall back to the closest language, then English)",
+  );
+
 export const AdminSettingsOutput = z
   .object({
     registration: z.object({
@@ -263,6 +269,9 @@ export const AdminSettingsOutput = z
         .nullable()
         .describe("ISO 8601 timestamp of the last telemetry report"),
     }),
+    metadata: z.object({
+      language: MetadataLanguageSchema,
+    }),
   })
   .meta({ description: "Combined admin settings for registration, update checks, and telemetry" });
 
@@ -277,6 +286,7 @@ export const AdminSettingsUpdateInput = z
     telemetry: z
       .object({ enabled: z.boolean().describe("Whether anonymous telemetry is enabled") })
       .optional(),
+    metadata: z.object({ language: MetadataLanguageSchema }).optional(),
   })
   .meta({ description: "Partial update to admin settings" });
 

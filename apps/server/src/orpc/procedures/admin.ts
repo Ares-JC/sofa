@@ -15,6 +15,7 @@ import {
   purgeImageCache as purgeImagesFn,
   purgeMetadataCache as purgeMetadataFn,
 } from "@sofa/core/cache";
+import { changeMetadataLanguage, getMetadataLanguage } from "@sofa/core/metadata-language";
 import { getSetting, setSetting } from "@sofa/core/settings";
 import { getSystemHealth } from "@sofa/core/system-health";
 import { isTelemetryEnabled } from "@sofa/core/telemetry";
@@ -52,6 +53,9 @@ export const settingsGet = os.admin.settings.get.use(admin).handler(() => {
       enabled: isTelemetryEnabled(),
       lastReportedAt: getSetting("telemetryLastReportedAt") ?? null,
     },
+    metadata: {
+      language: getMetadataLanguage(),
+    },
   };
 });
 
@@ -64,6 +68,10 @@ export const settingsUpdate = os.admin.settings.update.use(admin).handler(({ inp
   }
   if (input.telemetry) {
     setSetting("telemetryEnabled", String(input.telemetry.enabled));
+  }
+  if (input.metadata && changeMetadataLanguage(input.metadata.language)) {
+    // Re-download library titles in the new language now rather than waiting for tonight.
+    triggerCronJob("nightlyRefreshLibrary");
   }
 });
 

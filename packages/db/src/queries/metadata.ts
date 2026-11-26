@@ -49,6 +49,14 @@ export function updateTitleFields(titleId: string, values: Partial<typeof titles
   db.update(titles).set(values).where(eq(titles.id, titleId)).run();
 }
 
+/**
+ * Mark every fetched title as due for a refresh (e.g. after the metadata language changes), so
+ * the nightly job and the next visit refetch it. Shell titles (never fetched) are left alone.
+ */
+export function markAllTitlesStale(at: Date = new Date(0)) {
+  db.update(titles).set({ lastFetchedAt: at }).where(isNotNull(titles.lastFetchedAt)).run();
+}
+
 export function updateTrailerKey(titleId: string, key: string | null) {
   db.update(titles).set({ trailerVideoKey: key }).where(eq(titles.id, titleId)).run();
 }

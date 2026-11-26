@@ -122,6 +122,40 @@ const baseUrlRewriteMiddleware: Middleware | null = stripVersionPrefix
     }
   : null;
 
+// ─── Metadata language ──────────────────────────────────────────────
+
+export const METADATA_LANGUAGES = ["en-US", "es-ES", "es-MX"] as const;
+export type MetadataLanguage = (typeof METADATA_LANGUAGES)[number];
+
+/** Where to look when a translation is missing, after the chosen language. */
+const LANGUAGE_FALLBACKS: Record<MetadataLanguage, string[]> = {
+  "en-US": [],
+  "es-ES": ["es-MX", "en-US"],
+  "es-MX": ["es-ES", "en-US"],
+};
+
+let metadataLanguage: MetadataLanguage = "en-US";
+
+/** Language TMDB text (titles, overviews, episode names) is requested in. */
+export function setTmdbLanguage(language: MetadataLanguage) {
+  metadataLanguage = language;
+}
+
+export function getTmdbLanguage(): MetadataLanguage {
+  return metadataLanguage;
+}
+
+/** Add `language` to every request that doesn't set its own (TMDB defaults to en-US). */
+const languageMiddleware: Middleware = {
+  async onRequest({ request }) {
+    if (metadataLanguage === "en-US") return request;
+    const url = new URL(request.url);
+    if (url.searchParams.has("language")) return request;
+    url.searchParams.set("language", metadataLanguage);
+    return new Request(url.toString(), request);
+  },
+};
+
 const TMDB_REQUEST_TIMEOUT_MS = 30_000;
 
 const requestTimeouts = new WeakMap<Request, Timer>();
@@ -170,7 +204,60 @@ const loggingMiddleware: Middleware = {
 
 const client = createClient<paths>({ baseUrl });
 if (baseUrlRewriteMiddleware) client.use(baseUrlRewriteMiddleware);
-client.use(timeoutMiddleware, authMiddleware, loggingMiddleware);
+client.use(languageMiddleware, timeoutMiddleware, authMiddleware, loggingMiddleware);
+
+// ─── Translation fallback ───────────────────────────────────────────
+
+interface TmdbTranslations {
+  translations?: {
+    iso_639_1: string;
+    iso_3166_1: string;
+    data?: { title?: string; name?: string; overview?: string };
+  }[];
+}
+
+/** First non-empty value across the chosen language and its fallbacks. */
+function pickTranslation(
+  translations: TmdbTranslations | undefined,
+  field: "title" | "name" | "overview",
+): string | undefined {
+  const list = translations?.translations ?? [];
+  for (const tag of [metadataLanguage, ...LANGUAGE_FALLBACKS[metadataLanguage]]) {
+    const [lang, region] = tag.split("-");
+    const hit = list.find((t) => t.iso_639_1 === lang && t.iso_3166_1 === region);
+    const value = hit?.data?.[field]?.trim();
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/**
+ * TMDB leaves fields empty (overview) or in the original language (title) when the requested
+ * translation is missing; fill them from the closest available translation instead.
+ */
+export function applyDetailFallback<T extends { overview?: string | null; translations?: unknown }>(
+  data: T,
+  titleField: "title" | "name",
+): T {
+  if (metadataLanguage === "en-US") return data;
+  const translations = data.translations as TmdbTranslations | undefined;
+  const result = { ...data } as T & Record<string, unknown>;
+  const title = pickTranslation(translations, titleField);
+  if (title) result[titleField] = title;
+  if (!data.overview?.trim()) {
+    const overview = pickTranslation(translations, "overview");
+    if (overview) result.overview = overview;
+  }
+  return result;
+}
+
+/** Translated detail requests also fetch all translations for the fallback above. */
+function withTranslations(appendToResponse: string) {
+  return metadataLanguage === "en-US" ? appendToResponse : `${appendToResponse},translations`;
+}
+
+/** Placeholder episode names TMDB uses when no real name exists in a language. */
+const GENERIC_EPISODE_NAME_RE = /^(episode|episodio|capítulo|capitulo|ep\.?)\s*\d+$/i;
 
 // ─── Search ─────────────────────────────────────────────────────────
 
@@ -204,22 +291,22 @@ export async function getMovieDetails(tmdbId: number) {
   const { data, error } = await client.GET("/3/movie/{movie_id}", {
     params: {
       path: { movie_id: tmdbId },
-      query: { append_to_response: "release_dates" },
+      query: { append_to_response: withTranslations("release_dates") },
     },
   });
   if (error) throw new Error(`TMDB API error: movie/${tmdbId}`);
-  return data as TmdbMovieDetails;
+  return applyDetailFallback(data as TmdbMovieDetails & { translations?: unknown }, "title");
 }
 
 export async function getTvDetails(tmdbId: number) {
   const { data, error } = await client.GET("/3/tv/{series_id}", {
     params: {
       path: { series_id: tmdbId },
-      query: { append_to_response: "content_ratings,external_ids" },
+      query: { append_to_response: withTranslations("content_ratings,external_ids") },
     },
   });
   if (error) throw new Error(`TMDB API error: tv/${tmdbId}`);
-  return data as TmdbTvDetails;
+  return applyDetailFallback(data as TmdbTvDetails & { translations?: unknown }, "name");
 }
 
 export interface TmdbEpisodeGroupSummary {
@@ -269,13 +356,46 @@ export async function getTvExternalIds(tmdbId: number) {
   return data;
 }
 
-export async function getTvSeasonDetails(tmdbId: number, seasonNumber: number) {
+async function fetchTvSeason(tmdbId: number, seasonNumber: number, language?: string) {
   const { data, error } = await client.GET("/3/tv/{series_id}/season/{season_number}", {
     params: {
       path: { series_id: tmdbId, season_number: seasonNumber },
+      ...(language ? { query: { language } } : {}),
     },
   });
   if (error) throw new Error(`TMDB API error: tv/${tmdbId}/season/${seasonNumber}`);
+  return data;
+}
+
+export async function getTvSeasonDetails(tmdbId: number, seasonNumber: number) {
+  const data = await fetchTvSeason(tmdbId, seasonNumber);
+  if (metadataLanguage === "en-US" || !data) return data;
+
+  // Fill missing/placeholder episode names and overviews from the fallback languages.
+  const needsName = (name?: string | null) => !name?.trim() || GENERIC_EPISODE_NAME_RE.test(name);
+  const missing = () =>
+    (data.episodes ?? []).some((ep) => needsName(ep.name) || !ep.overview?.trim()) ||
+    !data.overview?.trim();
+
+  for (const language of LANGUAGE_FALLBACKS[metadataLanguage]) {
+    if (!missing()) break;
+    let fallback: Awaited<ReturnType<typeof fetchTvSeason>>;
+    try {
+      fallback = await fetchTvSeason(tmdbId, seasonNumber, language);
+    } catch {
+      continue;
+    }
+    const byNumber = new Map(
+      (fallback?.episodes ?? []).map((ep) => [ep.episode_number, ep] as const),
+    );
+    for (const ep of data.episodes ?? []) {
+      const other = byNumber.get(ep.episode_number);
+      if (!other) continue;
+      if (needsName(ep.name) && other.name?.trim() && !needsName(other.name)) ep.name = other.name;
+      if (!ep.overview?.trim() && other.overview?.trim()) ep.overview = other.overview;
+    }
+    if (!data.overview?.trim() && fallback?.overview?.trim()) data.overview = fallback.overview;
+  }
   return data;
 }
 

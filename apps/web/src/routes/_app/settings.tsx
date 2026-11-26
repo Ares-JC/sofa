@@ -19,6 +19,7 @@ import { CacheSection } from "@/components/settings/danger-section";
 import { ImportsSection } from "@/components/settings/imports-section";
 import { IntegrationsSection } from "@/components/settings/integrations-section";
 import { LanguageSection } from "@/components/settings/language-section";
+import { MetadataLanguageSection } from "@/components/settings/metadata-language-section";
 import { RegistrationSection } from "@/components/settings/registration-section";
 import { SettingsShell } from "@/components/settings/settings-shell";
 import { StreamingServicesSection } from "@/components/settings/streaming-services-section";
@@ -153,6 +154,9 @@ function SettingsPage() {
             </span>
           </div>
           <div className="space-y-2.5">
+            <Card className="border-s-primary/30 border-s-2">
+              <MetadataLanguageSection />
+            </Card>
             <Card className="border-s-primary/30 border-s-2">
               <RegistrationSection />
             </Card>

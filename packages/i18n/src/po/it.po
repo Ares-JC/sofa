@@ -4155,3 +4155,31 @@ msgstr ""
 #: apps/web/src/components/titles/season-order-menu.tsx
 msgid "Production"
 msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Metadata language saved"
+msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Your library is updating in the background; other titles update when opened."
+msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Failed to save the metadata language"
+msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Spanish (Spain)"
+msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Spanish (Latin America)"
+msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Metadata language"
+msgstr ""
+
+#: apps/web/src/components/settings/metadata-language-section.tsx
+msgid "Language for titles, synopses and episode names. When a translation is missing, the closest one is used, then English. Applies to every user."
+msgstr ""

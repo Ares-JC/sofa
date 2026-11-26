@@ -58,6 +58,7 @@ import {
   imageCacheEnabled,
   loadImageBuffer,
 } from "./image-cache";
+import { getMetadataLanguageChangedAt } from "./metadata-language";
 import { generateProviderUrl } from "./providers";
 import {
   generateEpisodeThumbHash,
@@ -336,11 +337,18 @@ export async function refreshTitle(titleId: string) {
       lastFetchedAt: now,
     });
     upsertGenresTransaction(titleId, show.genres ?? []);
-    const onlySeasons = seasonsToRefresh(
-      show.status ?? null,
-      show.number_of_seasons,
-      getSeasonsForTitle(titleId).map((s) => s.seasonNumber),
-    );
+    // After a metadata language change, refetch every season (not just the latest ones).
+    const languageChangedAt = getMetadataLanguageChangedAt();
+    const fullRefresh =
+      languageChangedAt != null &&
+      (!title.lastFetchedAt || title.lastFetchedAt.getTime() < languageChangedAt.getTime());
+    const onlySeasons = fullRefresh
+      ? undefined
+      : seasonsToRefresh(
+          show.status ?? null,
+          show.number_of_seasons,
+          getSeasonsForTitle(titleId).map((s) => s.seasonNumber),
+        );
     await refreshTvChildren(titleId, title.tmdbId, show.number_of_seasons, { onlySeasons });
   }
 

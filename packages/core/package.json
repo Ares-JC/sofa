@@ -21,6 +21,7 @@
     "./integrations": "./src/integrations.ts",
     "./lists": "./src/lists.ts",
     "./metadata": "./src/metadata.ts",
+    "./metadata-language": "./src/metadata-language.ts",
     "./person": "./src/person.ts",
     "./platforms": "./src/platforms.ts",
     "./providers": "./src/providers.ts",
