@@ -1,5 +1,11 @@
 import { useLingui } from "@lingui/react/macro";
-import { IconCheck, IconChecks, IconLoader, IconStack2 } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconChecks,
+  IconLoader,
+  IconStack2,
+  IconTrophy,
+} from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -58,6 +64,8 @@ export function CollectionButton() {
   const isWatched = (id: string) => overrides[id] ?? userStatuses[id] === "completed";
   const watchedCount = movies.filter((item) => isWatched(item.id)).length;
   const total = movies.length;
+  /** Every movie of the series watched: shown as an achievement in gold. */
+  const complete = total > 0 && watchedCount === total;
 
   async function toggle(ids: string[], watched: boolean) {
     setPending((prev) => new Set([...prev, ...ids]));
@@ -90,11 +98,22 @@ export function CollectionButton() {
         variant="outline"
         size="lg"
         onClick={() => setOpen(true)}
-        className="h-9 rounded-lg px-4 text-sm"
+        title={complete ? t`Collection complete!` : undefined}
+        className={`h-9 rounded-lg px-4 text-sm transition-colors ${
+          complete
+            ? "border-amber-400/50 bg-amber-400/10 text-amber-300 shadow-[0_0_16px_-4px] shadow-amber-400/40 hover:bg-amber-400/20 hover:text-amber-200"
+            : ""
+        }`}
       >
-        <IconStack2 aria-hidden={true} className="size-3.5" />
+        {complete ? (
+          <IconTrophy aria-hidden={true} className="size-3.5" />
+        ) : (
+          <IconStack2 aria-hidden={true} className="size-3.5" />
+        )}
         {t`Collection`}
-        <span className="text-muted-foreground font-mono text-xs tabular-nums">
+        <span
+          className={`font-mono text-xs tabular-nums ${complete ? "text-amber-300/80" : "text-muted-foreground"}`}
+        >
           {watchedCount}/{total}
         </span>
       </Button>
@@ -116,9 +135,21 @@ export function CollectionButton() {
                 <DialogTitle className="font-display text-xl tracking-tight">
                   {collection.name}
                 </DialogTitle>
-                <DialogDescription>{t`${watchedCount} of ${total} movies watched`}</DialogDescription>
+                <DialogDescription>
+                  {complete ? (
+                    <span className="inline-flex items-center gap-1.5 font-medium text-amber-300">
+                      <IconTrophy aria-hidden={true} className="size-3.5" />
+                      {t`Collection complete!`}
+                    </span>
+                  ) : (
+                    t`${watchedCount} of ${total} movies watched`
+                  )}
+                </DialogDescription>
               </div>
-              <Progress value={total > 0 ? (watchedCount / total) * 100 : 0} />
+              <Progress
+                value={total > 0 ? (watchedCount / total) * 100 : 0}
+                className={complete ? "[&_[data-slot=progress-indicator]]:bg-amber-400" : undefined}
+              />
             </div>
           </DialogHeader>
 

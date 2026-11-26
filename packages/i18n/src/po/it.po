@@ -4211,3 +4211,7 @@ msgstr ""
 #: apps/web/src/components/back-button.tsx
 msgid "Back"
 msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "Collection complete!"
+msgstr ""
