@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
+import { BackButton } from "@/components/back-button";
 import { PersonDetailClient, PersonDetailSkeleton } from "@/components/people/person-detail-client";
 import { RouteError } from "@/components/route-error";
 import { getAppErrorCode } from "@/lib/error-messages";
@@ -42,7 +43,12 @@ export const Route = createFileRoute("/_app/people/$id")({
 
 function PersonPage() {
   const { id } = Route.useParams();
-  return <PersonDetailClient id={id} />;
+  return (
+    <div className="space-y-4">
+      <BackButton className="-ms-2" />
+      <PersonDetailClient id={id} />
+    </div>
+  );
 }
 
 function PersonNotFound() {

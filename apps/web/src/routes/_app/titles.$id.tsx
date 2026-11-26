@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
+import { BackButton } from "@/components/back-button";
 import { TitleActions } from "@/components/titles/title-actions";
 import { TitleAvailability } from "@/components/titles/title-availability";
 import { TitleCast } from "@/components/titles/title-cast";
@@ -57,6 +58,7 @@ function TitleDetailPage() {
   return (
     <div className="relative space-y-6" style={themeStyle}>
       <TitleTheme style={themeStyle as Record<string, string>} />
+      <BackButton className="absolute start-0 top-0 z-20" />
       <TitleProvider
         key={title.id}
         titleId={title.id}

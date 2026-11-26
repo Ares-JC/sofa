@@ -4207,3 +4207,7 @@ msgstr ""
 #: apps/web/src/components/titles/title-collection.tsx
 msgid "Mark all watched"
 msgstr ""
+
+#: apps/web/src/components/back-button.tsx
+msgid "Back"
+msgstr ""
