@@ -26,13 +26,27 @@ export interface ContinueWatchingItemProps {
   } | null;
   totalEpisodes: number;
   watchedEpisodes: number;
+  titleType?: "movie" | "tv";
+  /** Where playback stopped on the media server (half-watched movie or episode). */
+  playback?: { positionSeconds: number; durationSeconds: number } | null;
+}
+
+function minutesLeft(playback: { positionSeconds: number; durationSeconds: number }) {
+  return Math.max(1, Math.round((playback.durationSeconds - playback.positionSeconds) / 60));
 }
 
 export function ContinueWatchingCard({ item }: { item: ContinueWatchingItemProps }) {
   const { t } = useLingui();
   const { watchEpisode, pendingId } = useQuickWatchEpisode();
   const stillUrl = item.nextEpisode?.stillPath ?? item.title.backdropPath ?? null;
-  const progress = item.totalEpisodes > 0 ? (item.watchedEpisodes / item.totalEpisodes) * 100 : 0;
+  const playback = item.playback ?? null;
+  const isMovie = item.titleType === "movie";
+  const progress = playback
+    ? (playback.positionSeconds / playback.durationSeconds) * 100
+    : item.totalEpisodes > 0
+      ? (item.watchedEpisodes / item.totalEpisodes) * 100
+      : 0;
+  const remaining = playback ? minutesLeft(playback) : 0;
   const watchedEpisodes = item.watchedEpisodes;
   const totalEpisodes = item.totalEpisodes;
 
@@ -72,11 +86,19 @@ export function ContinueWatchingCard({ item }: { item: ContinueWatchingItemProps
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          {isMovie && playback && (
+            <div className="absolute right-3 bottom-2.5 left-3">
+              <p className="text-primary flex items-center gap-1.5 text-[10px] font-medium tracking-wider uppercase">
+                <span className="bg-primary inline-block h-1.5 w-1.5 rounded-full motion-safe:animate-pulse" />
+                {t`Resume · ${remaining} min left`}
+              </p>
+            </div>
+          )}
           {item.nextEpisode && (
             <div className="absolute right-3 bottom-2.5 left-3">
               <p className="text-primary flex items-center gap-1.5 text-[10px] font-medium tracking-wider uppercase">
                 <span className="bg-primary inline-block h-1.5 w-1.5 rounded-full motion-safe:animate-pulse" />
-                {t`Up next`}
+                {playback ? t`Resume · ${remaining} min left` : t`Up next`}
               </p>
               <p className="mt-0.5 truncate text-sm font-medium text-white">
                 <span className="me-0.5 font-mono text-xs text-white/60 [word-spacing:-0.25em]">
@@ -91,7 +113,9 @@ export function ContinueWatchingCard({ item }: { item: ContinueWatchingItemProps
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{item.title.title}</p>
             <p className="text-muted-foreground text-xs">
-              {t`${watchedEpisodes}/${plural(totalEpisodes, { one: "# episode", other: "# episodes" })}`}
+              {isMovie
+                ? t`Movie`
+                : t`${watchedEpisodes}/${plural(totalEpisodes, { one: "# episode", other: "# episodes" })}`}
             </p>
           </div>
           <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors">

@@ -425,6 +425,38 @@ export const personFilmography = sqliteTable(
   ],
 );
 
+// ─── Playback Progress ──────────────────────────────────────────────
+
+/**
+ * Where a user stopped a movie or episode on their media server (from pause/stop webhooks), so
+ * Continue Watching can show half-watched items like the media server does. Cleared when the item
+ * is scrobbled as watched.
+ */
+export const playbackProgress = sqliteTable(
+  "playbackProgress",
+  {
+    id: uuidPk(),
+    userId: text("userId")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    titleId: text("titleId")
+      .notNull()
+      .references(() => titles.id, { onDelete: "cascade" }),
+    /** Null for movies. */
+    episodeId: text("episodeId").references(() => episodes.id, { onDelete: "cascade" }),
+    /** Episode ID for episodes, title ID for movies — one row per item per user. */
+    mediaKey: text("mediaKey").notNull(),
+    positionSeconds: int("positionSeconds").notNull(),
+    durationSeconds: int("durationSeconds").notNull(),
+    source: text("source", { enum: ["plex", "jellyfin", "emby"] }).notNull(),
+    updatedAt: int("updatedAt", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("playbackProgress_userId_mediaKey").on(table.userId, table.mediaKey),
+    index("playbackProgress_userId_updatedAt").on(table.userId, table.updatedAt),
+  ],
+);
+
 // ─── Integrations ───────────────────────────────────────────────────
 
 export const integrations = sqliteTable(

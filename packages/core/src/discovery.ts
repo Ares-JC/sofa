@@ -22,6 +22,7 @@ import {
   getUpcomingMovies,
   getUserStatusCounts,
 } from "@sofa/db/queries/discovery";
+import { getLatestMovieWatchDates, getRecentPlaybackProgress } from "@sofa/db/queries/playback";
 import { tmdbImageUrl } from "@sofa/tmdb/image";
 
 import type { DisplayStatus } from "./display-status";
@@ -170,20 +171,42 @@ export interface ContinueWatchingItem {
   lastWatchedAt: Date | null;
   totalEpisodes: number;
   watchedEpisodes: number;
+  /** Where playback stopped on the media server, for a half-watched movie or next episode. */
+  playback: { positionSeconds: number; durationSeconds: number; updatedAt: Date } | null;
 }
 
+/** Half-watched items older than this drop out of Continue Watching. */
+const PLAYBACK_PROGRESS_WINDOW_MS = 60 * 24 * 60 * 60 * 1000;
+
 export function getContinueWatchingFeed(userId: string): ContinueWatchingItem[] {
-  // Get in-progress TV shows
+  // Where the user stopped things on their media server (newest first)
+  const progressRows = getRecentPlaybackProgress(
+    userId,
+    new Date(Date.now() - PLAYBACK_PROGRESS_WINDOW_MS),
+  );
+  const movieItems = getHalfWatchedMovies(userId, progressRows);
+  const episodeProgress = new Map<string, (typeof progressRows)[number]>();
+  for (const row of progressRows) {
+    if (row.episodeId && !episodeProgress.has(row.episodeId)) {
+      episodeProgress.set(row.episodeId, row);
+    }
+  }
+
+  // In-progress TV shows, plus shows with a half-watched episode (e.g. started on Plex)
   const inProgress = getInProgressTitleIds(userId);
+  const titleIds = [
+    ...new Set([
+      ...inProgress.map((r) => r.titleId),
+      ...progressRows.filter((r) => r.episodeId).map((r) => r.titleId),
+    ]),
+  ];
 
-  if (inProgress.length === 0) return [];
-
-  const titleIds = inProgress.map((r) => r.titleId);
+  if (titleIds.length === 0) return sortContinueWatching(movieItems);
 
   // Batch fetch all TV titles (1 query)
   const tvTitles = getTvTitlesByIds(titleIds);
 
-  if (tvTitles.length === 0) return [];
+  if (tvTitles.length === 0) return sortContinueWatching(movieItems);
 
   const tvTitleIds = tvTitles.map((t) => t.id);
   const titleMap = new Map(tvTitles.map((t) => [t.id, t]));
@@ -230,8 +253,8 @@ export function getContinueWatchingFeed(userId: string): ContinueWatchingItem[] 
   const today = localDateString();
   const isAired = (airDate: string | null) => airDate != null && airDate <= today;
 
-  for (const row of inProgress) {
-    const title = titleMap.get(row.titleId);
+  for (const titleId of titleIds) {
+    const title = titleMap.get(titleId);
     if (!title) continue;
 
     const titleSeasonsArr = seasonsByTitle.get(title.id) ?? [];
@@ -239,12 +262,37 @@ export function getContinueWatchingFeed(userId: string): ContinueWatchingItem[] 
     let lastWatchedAt: Date | null = null;
     let totalEpisodes = 0;
     let watchedEpisodes = 0;
+    let playback: ContinueWatchingItem["playback"] = null;
+    let resumeEpisode: ContinueWatchingItem["nextEpisode"] = null;
 
     for (const s of titleSeasonsArr) {
       const eps = episodesBySeason.get(s.id) ?? [];
 
       for (const ep of eps) {
         const aired = isAired(ep.airDate);
+        // A half-watched episode (not finished since) is what to resume, newest first.
+        const progress = episodeProgress.get(ep.id);
+        const lastWatch = watchDateMap.get(ep.id);
+        if (
+          progress &&
+          (!lastWatch || progress.updatedAt > lastWatch) &&
+          (!playback || progress.updatedAt > playback.updatedAt)
+        ) {
+          playback = {
+            positionSeconds: progress.positionSeconds,
+            durationSeconds: progress.durationSeconds,
+            updatedAt: progress.updatedAt,
+          };
+          resumeEpisode = {
+            id: ep.id,
+            seasonNumber: s.seasonNumber,
+            episodeNumber: ep.episodeNumber,
+            name: ep.name,
+            stillPath: ep.stillPath,
+            stillThumbHash: ep.stillThumbHash,
+            overview: ep.overview,
+          };
+        }
         if (watchedEpisodeIds.has(ep.id)) {
           const watchDate = watchDateMap.get(ep.id);
           if (watchDate && (!lastWatchedAt || watchDate > lastWatchedAt)) {
@@ -271,6 +319,8 @@ export function getContinueWatchingFeed(userId: string): ContinueWatchingItem[] 
       }
     }
 
+    if (resumeEpisode) nextEpisode = resumeEpisode;
+
     if (nextEpisode) {
       items.push({
         title: {
@@ -285,18 +335,52 @@ export function getContinueWatchingFeed(userId: string): ContinueWatchingItem[] 
         lastWatchedAt,
         totalEpisodes,
         watchedEpisodes,
+        playback,
       });
     }
   }
 
-  // Sort by most recent watch
-  items.sort((a, b) => {
-    const aTime = a.lastWatchedAt?.getTime() ?? 0;
-    const bTime = b.lastWatchedAt?.getTime() ?? 0;
-    return bTime - aTime;
-  });
+  return sortContinueWatching([...items, ...movieItems]);
+}
 
-  return items;
+/** Most recent activity first: the last watch or the last pause/stop, whichever is newer. */
+function sortContinueWatching(items: ContinueWatchingItem[]): ContinueWatchingItem[] {
+  const activity = (item: ContinueWatchingItem) =>
+    Math.max(item.lastWatchedAt?.getTime() ?? 0, item.playback?.updatedAt.getTime() ?? 0);
+  return items.sort((a, b) => activity(b) - activity(a));
+}
+
+/** Movies stopped part-way on the media server and not watched (finished) since. */
+function getHalfWatchedMovies(
+  userId: string,
+  progressRows: ReturnType<typeof getRecentPlaybackProgress>,
+): ContinueWatchingItem[] {
+  const movieRows = progressRows.filter((r) => !r.episodeId && r.titleType === "movie");
+  const finished = getLatestMovieWatchDates(userId, movieRows.map((r) => r.titleId));
+  return movieRows
+    .filter((r) => {
+      const watchedAt = finished.get(r.titleId);
+      return !watchedAt || r.updatedAt > watchedAt;
+    })
+    .map((r) => ({
+      title: {
+        id: r.titleId,
+        title: r.title,
+        posterPath: r.posterPath,
+        backdropPath: r.backdropPath,
+        backdropThumbHash: r.backdropThumbHash,
+        type: r.titleType,
+      },
+      nextEpisode: null,
+      lastWatchedAt: null,
+      totalEpisodes: 0,
+      watchedEpisodes: 0,
+      playback: {
+        positionSeconds: r.positionSeconds,
+        durationSeconds: r.durationSeconds,
+        updatedAt: r.updatedAt,
+      },
+    }));
 }
 
 export { getNewAvailableFeed } from "@sofa/db/queries/discovery";

@@ -4099,3 +4099,7 @@ msgstr ""
 #: apps/web/src/routes/_app/explore.tsx
 msgid "Hide titles in my library"
 msgstr ""
+
+#: apps/web/src/components/dashboard/continue-watching-card.tsx
+msgid "Resume · {remaining} min left"
+msgstr ""

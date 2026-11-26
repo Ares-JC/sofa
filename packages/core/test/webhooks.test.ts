@@ -4,6 +4,7 @@ import {
   episodes,
   integrationEvents,
   integrations,
+  playbackProgress,
   userEpisodeWatches,
   userMovieWatches,
 } from "@sofa/db/schema";
@@ -19,6 +20,8 @@ import {
 
 import {
   isAccountAllowed,
+  parsePlexProgress,
+  processPlaybackProgress,
   matchesServerUsername,
   normalizeShowTitle,
   parseEmbyPayload,
@@ -977,5 +980,88 @@ describe("account IDs", () => {
     const row = testDb.select().from(integrations).all()[0];
     expect(row?.allowedAccounts).toEqual([{ id: "1", name: "Christian" }]);
     expect(row?.serverUsername).toBeNull();
+  });
+});
+
+describe("playback progress", () => {
+  test("parses Plex pause events with position and duration", () => {
+    const result = parsePlexProgress(
+      makePlexForm({
+        event: "media.pause",
+        Account: { id: 1, title: "christian" },
+        Metadata: {
+          type: "movie",
+          title: "Inception",
+          viewOffset: 1_800_000,
+          duration: 8_880_000,
+          Guid: [{ id: "tmdb://27205" }],
+        },
+      }),
+    );
+    expect(result).toMatchObject({ positionSeconds: 1800, durationSeconds: 8880, tmdbId: 27205 });
+  });
+
+  test("ignores scrobbles and events without a position", () => {
+    expect(
+      parsePlexProgress(makePlexForm({ event: "media.scrobble", Metadata: { type: "movie" } })),
+    ).toBeNull();
+    expect(
+      parsePlexProgress(makePlexForm({ event: "media.pause", Metadata: { type: "movie" } })),
+    ).toBeNull();
+  });
+
+  test("saves progress and clears it when the item is scrobbled", async () => {
+    insertUser("user-1");
+    const integration = insertIntegration("user-1", "plex", "plex-token-3");
+    const { insertTitle } = await import("@sofa/test/db");
+    insertTitle({ id: "title-1", tmdbId: 27205, type: "movie", title: "Inception" });
+    mockResolveMovieTmdbId.mockResolvedValue(27205);
+    mockGetOrFetchTitleByTmdbId.mockResolvedValue({ id: "title-1" });
+
+    const base = { provider: "plex" as const, mediaType: "movie" as const, title: "Inception" };
+    const saved = await processPlaybackProgress("user-1", "plex", {
+      ...base,
+      tmdbId: 27205,
+      positionSeconds: 1800,
+      durationSeconds: 8880,
+    });
+    expect(saved.status).toBe("success");
+    expect(testDb.select().from(playbackProgress).all()).toHaveLength(1);
+
+    await processWebhook(integration.id, "user-1", "plex", { ...base, tmdbId: 27205 });
+    expect(testDb.select().from(playbackProgress).all()).toHaveLength(0);
+  });
+
+  test("skips positions at the very start or end", async () => {
+    const base = { provider: "plex" as const, mediaType: "movie" as const, title: "X" };
+    const early = await processPlaybackProgress("user-1", "plex", {
+      ...base,
+      positionSeconds: 10,
+      durationSeconds: 6000,
+    });
+    const late = await processPlaybackProgress("user-1", "plex", {
+      ...base,
+      positionSeconds: 5900,
+      durationSeconds: 6000,
+    });
+    expect(early.status).toBe("ignored");
+    expect(late.status).toBe("ignored");
+  });
+
+  test("ignores other accounts' progress", async () => {
+    const result = await processPlaybackProgress(
+      "user-1",
+      "plex",
+      {
+        provider: "plex",
+        mediaType: "movie",
+        title: "X",
+        accountId: "2",
+        positionSeconds: 1800,
+        durationSeconds: 6000,
+      },
+      { allowedAccounts: [{ id: "1", name: "Christian" }] },
+    );
+    expect(result.status).toBe("ignored");
   });
 });

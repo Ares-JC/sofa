@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { getNextEpisode } from "@sofa/api/utils";
+import { upsertPlaybackProgress } from "@sofa/db/queries/playback";
 import {
   clearAllTables,
   insertPlatform,
@@ -574,5 +575,64 @@ describe("getRecommendationsForTitle", () => {
     const recs = getRecommendationsForTitle("m1");
     expect(recs).toHaveLength(2);
     expect(recs.map((rec) => rec.id)).toEqual(["rec1", "rec2"]);
+  });
+});
+
+// ── Playback progress in Continue Watching ──────────────────────────
+
+describe("getContinueWatchingFeed with playback progress", () => {
+  test("includes a half-watched movie with its position", () => {
+    insertUser();
+    insertTitle({ id: "m1", tmdbId: 1, type: "movie", title: "The Mongoose" });
+    upsertPlaybackProgress({
+      userId: "user-1",
+      titleId: "m1",
+      episodeId: null,
+      positionSeconds: 1800,
+      durationSeconds: 6000,
+      source: "plex",
+    });
+
+    const feed = getContinueWatchingFeed("user-1");
+    expect(feed).toHaveLength(1);
+    expect(feed[0].title.id).toBe("m1");
+    expect(feed[0].nextEpisode).toBeNull();
+    expect(feed[0].playback).toMatchObject({ positionSeconds: 1800, durationSeconds: 6000 });
+  });
+
+  test("drops a half-watched movie once it's watched afterwards", () => {
+    insertUser();
+    insertTitle({ id: "m1", tmdbId: 1, type: "movie" });
+    upsertPlaybackProgress({
+      userId: "user-1",
+      titleId: "m1",
+      episodeId: null,
+      positionSeconds: 1800,
+      durationSeconds: 6000,
+      source: "plex",
+    });
+    insertMovieWatch("user-1", "m1", new Date(TEST_NOW.getTime() + 60_000));
+
+    expect(getContinueWatchingFeed("user-1")).toHaveLength(0);
+  });
+
+  test("resumes a half-watched episode even if the show isn't in progress yet", () => {
+    insertUser();
+    const { titleId, episodeIds } = insertTvShow("tv-1", 99999, 1, 3, {
+      airDates: ["2026-01-01", "2026-01-08", "2026-01-15"],
+    });
+    upsertPlaybackProgress({
+      userId: "user-1",
+      titleId,
+      episodeId: episodeIds[1],
+      positionSeconds: 600,
+      durationSeconds: 2400,
+      source: "plex",
+    });
+
+    const feed = getContinueWatchingFeed("user-1");
+    expect(feed).toHaveLength(1);
+    expect(feed[0].nextEpisode?.id).toBe(episodeIds[1]);
+    expect(feed[0].playback?.positionSeconds).toBe(600);
   });
 });

@@ -1,4 +1,5 @@
 import { updateIntegrationSettings } from "@sofa/db/queries/integrations";
+import { deletePlaybackProgress, upsertPlaybackProgress } from "@sofa/db/queries/playback";
 import { findEpisodeBySeasonAndNumber, findSeasonByTitleAndNumber } from "@sofa/db/queries/title";
 import {
   getLibraryShows,
@@ -107,18 +108,22 @@ export function toOptionalInt(value: unknown): number | undefined {
 // ─── Payload Parsers ────────────────────────────────────────────────
 
 export function parsePlexPayload(formData: FormData): WebhookEvent | null {
+  const payload = parsePlexJson(formData);
+  if (!payload || payload.event !== "media.scrobble") return null;
+  return plexEvent(payload);
+}
+
+function parsePlexJson(formData: FormData): Record<string, unknown> | null {
   const raw = formData.get("payload");
   if (!raw || typeof raw !== "string") return null;
-
-  let payload: Record<string, unknown>;
   try {
-    payload = JSON.parse(raw);
+    return JSON.parse(raw) as Record<string, unknown>;
   } catch {
     return null;
   }
+}
 
-  if (payload.event !== "media.scrobble") return null;
-
+function plexEvent(payload: Record<string, unknown>): WebhookEvent | null {
   const metadata = payload.Metadata as Record<string, unknown> | undefined;
   if (!metadata) return null;
 
@@ -167,7 +172,10 @@ export function parseJellyfinPayload(body: Record<string, unknown>): WebhookEven
   const notifType = body.NotificationType as string | undefined;
   if (notifType !== "PlaybackStop") return null;
   if (body.PlayedToCompletion !== true) return null;
+  return jellyfinEvent(body);
+}
 
+function jellyfinEvent(body: Record<string, unknown>): WebhookEvent | null {
   const itemType = body.ItemType as string | undefined;
   const isMovie = itemType === "Movie";
   const isEpisode = itemType === "Episode";
@@ -203,7 +211,10 @@ export function parseEmbyPayload(body: Record<string, unknown>): WebhookEvent | 
   const playedToCompletion =
     body.PlayedToCompletion === true || playbackInfo?.PlayedToCompletion === true;
   if (!playedToCompletion) return null;
+  return embyEvent(body);
+}
 
+function embyEvent(body: Record<string, unknown>): WebhookEvent | null {
   const item = body.Item as Record<string, unknown> | undefined;
   if (!item) return null;
 
@@ -232,6 +243,88 @@ export function parseEmbyPayload(body: Record<string, unknown>): WebhookEvent | 
       toOptionalId((body.User as Record<string, unknown> | undefined)?.Id) ??
       toOptionalId(body.UserId),
   };
+}
+
+// ─── Playback Progress Parsers ──────────────────────────────────────
+
+export interface PlaybackProgressEvent extends WebhookEvent {
+  positionSeconds: number;
+  durationSeconds: number;
+}
+
+/** .NET ticks (Jellyfin/Emby) are 100 ns. */
+const TICKS_PER_SECOND = 10_000_000;
+
+function withProgress(
+  event: WebhookEvent | null,
+  position: number | undefined,
+  duration: number | undefined,
+): PlaybackProgressEvent | null {
+  if (!event || position == null || duration == null) return null;
+  if (!Number.isFinite(position) || !Number.isFinite(duration) || duration <= 0) return null;
+  return {
+    ...event,
+    positionSeconds: Math.max(0, Math.round(position)),
+    durationSeconds: Math.round(duration),
+  };
+}
+
+function toNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+}
+
+/** Plex pause/stop: where playback stopped (`viewOffset`, ms) out of `duration` (ms). */
+export function parsePlexProgress(formData: FormData): PlaybackProgressEvent | null {
+  const payload = parsePlexJson(formData);
+  if (!payload || (payload.event !== "media.pause" && payload.event !== "media.stop")) return null;
+  const metadata = payload.Metadata as Record<string, unknown> | undefined;
+  const offset = toNumber(metadata?.viewOffset);
+  const duration = toNumber(metadata?.duration);
+  return withProgress(
+    plexEvent(payload),
+    offset == null ? undefined : offset / 1000,
+    duration == null ? undefined : duration / 1000,
+  );
+}
+
+/** Jellyfin: stopped before the end, or paused (PlaybackProgress with IsPaused). */
+export function parseJellyfinProgress(body: Record<string, unknown>): PlaybackProgressEvent | null {
+  const notifType = body.NotificationType as string | undefined;
+  const stoppedEarly = notifType === "PlaybackStop" && body.PlayedToCompletion !== true;
+  const paused = notifType === "PlaybackProgress" && body.IsPaused === true;
+  if (!stoppedEarly && !paused) return null;
+  const position = toNumber(body.PlaybackPositionTicks);
+  const duration = toNumber(body.RunTimeTicks);
+  return withProgress(
+    jellyfinEvent(body),
+    position == null ? undefined : position / TICKS_PER_SECOND,
+    duration == null ? undefined : duration / TICKS_PER_SECOND,
+  );
+}
+
+/** Emby: paused, or stopped before the end. */
+export function parseEmbyProgress(body: Record<string, unknown>): PlaybackProgressEvent | null {
+  const event = body.Event as string | undefined;
+  const isPause = event === "playback.pause";
+  const isStop = event === "playback.stop" || event === "PlaybackStop";
+  if (!isPause && !isStop) return null;
+  const playbackInfo = body.PlaybackInfo as Record<string, unknown> | undefined;
+  if (isStop && (body.PlayedToCompletion === true || playbackInfo?.PlayedToCompletion === true)) {
+    return null;
+  }
+  const item = body.Item as Record<string, unknown> | undefined;
+  const position = toNumber(playbackInfo?.PositionTicks ?? body.PlaybackPositionTicks);
+  const duration = toNumber(item?.RunTimeTicks);
+  return withProgress(
+    embyEvent(body),
+    position == null ? undefined : position / TICKS_PER_SECOND,
+    duration == null ? undefined : duration / TICKS_PER_SECOND,
+  );
 }
 
 // ─── Title Resolution ───────────────────────────────────────────────
@@ -383,123 +476,40 @@ export async function processWebhook(
   log.info(`Received ${provider} webhook: ${event.mediaType} "${event.title}"`);
 
   try {
-    if (event.mediaType === "movie") {
-      const hasExternalId = event.tmdbId || event.imdbId || event.tvdbId;
-      const tmdbId = await resolveMovieTmdbId({
-        tmdbId: event.tmdbId,
-        imdbId: event.imdbId,
-        tvdbId: event.tvdbId,
-        // Only use title fallback when at least one external ID is present;
-        // title-only resolution without year is too unreliable for webhooks
-        title: hasExternalId ? event.title : undefined,
-      });
-      if (!tmdbId) {
-        log.warn(`Could not resolve TMDB ID for movie "${event.title}" from ${provider}`);
-        logEvent(connectionId, event, "error", "Could not resolve TMDB ID for movie");
-        return { status: "error", message: "Could not resolve TMDB ID" };
-      }
+    const resolved = await resolveTarget(event, userId, provider);
+    if (!resolved.ok) {
+      logEvent(connectionId, event, resolved.status, resolved.logMessage);
+      return { status: resolved.status, message: resolved.message };
+    }
+    const target = resolved.target;
 
-      const title = await getOrFetchTitleByTmdbId(tmdbId, "movie");
-      if (!title) {
-        logEvent(connectionId, event, "error", "Failed to import movie");
-        return { status: "error", message: "Failed to import movie" };
-      }
-
-      if (isDuplicateMovieWatch(userId, title.id)) {
+    if (target.kind === "movie") {
+      if (isDuplicateMovieWatch(userId, target.titleId)) {
         log.debug(`Duplicate movie watch ignored: "${event.title}"`);
         logEvent(connectionId, event, "ignored", "Duplicate watch within 5 minutes");
         return { status: "ignored", message: "Duplicate watch" };
       }
 
-      logMovieWatch(userId, title.id, provider);
-      log.info(`Logged movie watch: "${event.title}" (TMDB ${tmdbId})`);
+      logMovieWatch(userId, target.titleId, provider);
+      deletePlaybackProgress(userId, target.titleId);
+      log.info(`Logged movie watch: "${event.title}" (TMDB ${target.tmdbId})`);
       logEvent(connectionId, event, "success");
       return { status: "success", message: `Logged watch for ${event.title}` };
     }
 
-    if (event.mediaType === "episode") {
-      const resolved = await resolveEpisode(event, userId);
-      if (!resolved) {
-        log.warn(`Could not resolve episode "${event.title}" from ${provider}`);
-        logEvent(connectionId, event, "error", "Could not resolve episode");
-        return { status: "error", message: "Could not resolve episode" };
-      }
-
-      const title = await getOrFetchTitleByTmdbId(resolved.showTmdbId, "tv");
-      if (!title) {
-        logEvent(connectionId, event, "error", "Failed to import TV show");
-        return { status: "error", message: "Failed to import TV show" };
-      }
-
-      log.info(
-        `Matched ${provider} "${event.showTitle ?? event.title}" S${event.seasonNumber}E${event.episodeNumber} ` +
-          `to "${title.title}" (TMDB ${resolved.showTmdbId}) S${resolved.seasonNumber}E${resolved.episodeNumber} via ${resolved.via}`,
-      );
-
-      // Find the episode in our DB
-      let season = findSeasonByTitleAndNumber(title.id, resolved.seasonNumber);
-
-      // Sofa doesn't store specials (season 0). Don't refetch the whole show for them.
-      if (!season && resolved.seasonNumber === 0) {
-        logEvent(connectionId, event, "ignored", "Specials (season 0) are not tracked");
-        return { status: "ignored", message: "Specials are not tracked" };
-      }
-
-      let episode = season
-        ? findEpisodeBySeasonAndNumber(season.id, resolved.episodeNumber)
-        : undefined;
-
-      if (!episode) {
-        // Season or episode may be newer than our last TMDB fetch — refresh once.
-        try {
-          const show = await getTvDetails(resolved.showTmdbId);
-          await refreshTvChildren(title.id, resolved.showTmdbId, show.number_of_seasons);
-          season = findSeasonByTitleAndNumber(title.id, resolved.seasonNumber);
-          episode = season
-            ? findEpisodeBySeasonAndNumber(season.id, resolved.episodeNumber)
-            : undefined;
-        } catch (err) {
-          log.warn(`Failed to refresh seasons for TMDB ${resolved.showTmdbId}:`, err);
-        }
-      }
-
-      if (!season) {
-        logEvent(connectionId, event, "error", `Season ${resolved.seasonNumber} not found`);
-        return {
-          status: "error",
-          message: `Season ${resolved.seasonNumber} not found`,
-        };
-      }
-
-      if (!episode) {
-        logEvent(
-          connectionId,
-          event,
-          "error",
-          `S${resolved.seasonNumber}E${resolved.episodeNumber} not found`,
-        );
-        return {
-          status: "error",
-          message: `S${resolved.seasonNumber}E${resolved.episodeNumber} not found`,
-        };
-      }
-
-      if (isDuplicateEpisodeWatch(userId, episode.id)) {
-        log.debug(`Duplicate episode watch ignored: "${event.title}"`);
-        logEvent(connectionId, event, "ignored", "Duplicate watch within 5 minutes");
-        return { status: "ignored", message: "Duplicate watch" };
-      }
-
-      logEpisodeWatch(userId, episode.id, provider);
-      log.info(
-        `Logged episode watch: "${event.title}" S${resolved.seasonNumber}E${resolved.episodeNumber}`,
-      );
-      logEvent(connectionId, event, "success");
-      return { status: "success", message: `Logged watch for ${event.title}` };
+    if (isDuplicateEpisodeWatch(userId, target.episodeId)) {
+      log.debug(`Duplicate episode watch ignored: "${event.title}"`);
+      logEvent(connectionId, event, "ignored", "Duplicate watch within 5 minutes");
+      return { status: "ignored", message: "Duplicate watch" };
     }
 
-    logEvent(connectionId, event, "ignored", `Unsupported media type: ${event.mediaType}`);
-    return { status: "ignored", message: "Unsupported media type" };
+    logEpisodeWatch(userId, target.episodeId, provider);
+    deletePlaybackProgress(userId, target.episodeId);
+    log.info(
+      `Logged episode watch: "${event.title}" S${target.seasonNumber}E${target.episodeNumber}`,
+    );
+    logEvent(connectionId, event, "success");
+    return { status: "success", message: `Logged watch for ${event.title}` };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     try {
@@ -507,6 +517,181 @@ export async function processWebhook(
     } catch {
       // best-effort
     }
+    return { status: "error", message };
+  }
+}
+
+// ─── Target Resolution ──────────────────────────────────────────────
+
+type WatchTarget =
+  | { kind: "movie"; titleId: string; tmdbId: number }
+  | {
+      kind: "episode";
+      titleId: string;
+      episodeId: string;
+      seasonNumber: number;
+      episodeNumber: number;
+    };
+
+type TargetResult =
+  | { ok: true; target: WatchTarget }
+  | { ok: false; status: "ignored" | "error"; message: string; logMessage: string };
+
+function targetFailure(
+  status: "ignored" | "error",
+  message: string,
+  logMessage = message,
+): TargetResult {
+  return { ok: false, status, message, logMessage };
+}
+
+/** Find (importing if needed) the movie or episode a webhook event refers to. */
+async function resolveTarget(
+  event: WebhookEvent,
+  userId: string,
+  provider: "plex" | "jellyfin" | "emby",
+): Promise<TargetResult> {
+  if (event.mediaType === "movie") {
+    const hasExternalId = event.tmdbId || event.imdbId || event.tvdbId;
+    const tmdbId = await resolveMovieTmdbId({
+      tmdbId: event.tmdbId,
+      imdbId: event.imdbId,
+      tvdbId: event.tvdbId,
+      // Only use title fallback when at least one external ID is present;
+      // title-only resolution without year is too unreliable for webhooks
+      title: hasExternalId ? event.title : undefined,
+    });
+    if (!tmdbId) {
+      log.warn(`Could not resolve TMDB ID for movie "${event.title}" from ${provider}`);
+      return targetFailure(
+        "error",
+        "Could not resolve TMDB ID",
+        "Could not resolve TMDB ID for movie",
+      );
+    }
+
+    const title = await getOrFetchTitleByTmdbId(tmdbId, "movie");
+    if (!title) return targetFailure("error", "Failed to import movie");
+    return { ok: true, target: { kind: "movie", titleId: title.id, tmdbId } };
+  }
+
+  if (event.mediaType !== "episode") {
+    return targetFailure(
+      "ignored",
+      "Unsupported media type",
+      `Unsupported media type: ${event.mediaType}`,
+    );
+  }
+
+  const resolved = await resolveEpisode(event, userId);
+  if (!resolved) {
+    log.warn(`Could not resolve episode "${event.title}" from ${provider}`);
+    return targetFailure("error", "Could not resolve episode");
+  }
+
+  const title = await getOrFetchTitleByTmdbId(resolved.showTmdbId, "tv");
+  if (!title) return targetFailure("error", "Failed to import TV show");
+
+  log.info(
+    `Matched ${provider} "${event.showTitle ?? event.title}" S${event.seasonNumber}E${event.episodeNumber} ` +
+      `to "${title.title}" (TMDB ${resolved.showTmdbId}) S${resolved.seasonNumber}E${resolved.episodeNumber} via ${resolved.via}`,
+  );
+
+  // Find the episode in our DB
+  let season = findSeasonByTitleAndNumber(title.id, resolved.seasonNumber);
+
+  // Sofa doesn't store specials (season 0). Don't refetch the whole show for them.
+  if (!season && resolved.seasonNumber === 0) {
+    return targetFailure(
+      "ignored",
+      "Specials are not tracked",
+      "Specials (season 0) are not tracked",
+    );
+  }
+
+  let episode = season
+    ? findEpisodeBySeasonAndNumber(season.id, resolved.episodeNumber)
+    : undefined;
+
+  if (!episode) {
+    // Season or episode may be newer than our last TMDB fetch — refresh once.
+    try {
+      const show = await getTvDetails(resolved.showTmdbId);
+      await refreshTvChildren(title.id, resolved.showTmdbId, show.number_of_seasons);
+      season = findSeasonByTitleAndNumber(title.id, resolved.seasonNumber);
+      episode = season
+        ? findEpisodeBySeasonAndNumber(season.id, resolved.episodeNumber)
+        : undefined;
+    } catch (err) {
+      log.warn(`Failed to refresh seasons for TMDB ${resolved.showTmdbId}:`, err);
+    }
+  }
+
+  if (!season) return targetFailure("error", `Season ${resolved.seasonNumber} not found`);
+  if (!episode) {
+    return targetFailure("error", `S${resolved.seasonNumber}E${resolved.episodeNumber} not found`);
+  }
+
+  return {
+    ok: true,
+    target: {
+      kind: "episode",
+      titleId: title.id,
+      episodeId: episode.id,
+      seasonNumber: resolved.seasonNumber,
+      episodeNumber: resolved.episodeNumber,
+    },
+  };
+}
+
+// ─── Playback Progress ──────────────────────────────────────────────
+
+/** Ignore blips at the very start and the end (the scrobble covers finished items). */
+const MIN_PROGRESS_SECONDS = 60;
+const MAX_PROGRESS_FRACTION = 0.95;
+
+/**
+ * Remember where the user stopped a movie or episode, for Continue Watching. Progress events are
+ * frequent, so they're not written to the integration's event log, and failures are only logged.
+ */
+export async function processPlaybackProgress(
+  userId: string,
+  provider: "plex" | "jellyfin" | "emby",
+  event: PlaybackProgressEvent,
+  options: { allowedAccounts?: AllowedAccount[] | null; serverUsername?: string | null } = {},
+): Promise<{ status: "success" | "ignored" | "error"; message: string }> {
+  if (!isAccountAllowed(event, options.allowedAccounts, options.serverUsername)) {
+    return { status: "ignored", message: "Played by another user" };
+  }
+  if (
+    event.positionSeconds < MIN_PROGRESS_SECONDS ||
+    event.positionSeconds > event.durationSeconds * MAX_PROGRESS_FRACTION
+  ) {
+    return { status: "ignored", message: "Position outside the trackable range" };
+  }
+
+  try {
+    const resolved = await resolveTarget(event, userId, provider);
+    if (!resolved.ok) {
+      log.debug(`Playback progress not saved for "${event.title}": ${resolved.logMessage}`);
+      return { status: resolved.status, message: resolved.message };
+    }
+    const target = resolved.target;
+    upsertPlaybackProgress({
+      userId,
+      titleId: target.titleId,
+      episodeId: target.kind === "episode" ? target.episodeId : null,
+      positionSeconds: event.positionSeconds,
+      durationSeconds: event.durationSeconds,
+      source: provider,
+    });
+    log.debug(
+      `Saved ${provider} progress for "${event.title}": ${event.positionSeconds}/${event.durationSeconds}s`,
+    );
+    return { status: "success", message: "Progress saved" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    log.warn(`Failed to save playback progress for "${event.title}": ${message}`);
     return { status: "error", message };
   }
 }

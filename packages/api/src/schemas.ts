@@ -668,8 +668,18 @@ export const ContinueWatchingOutput = z
             .describe("Next unwatched episode, or null if all caught up"),
           totalEpisodes: z.number().describe("Total episodes across all seasons"),
           watchedEpisodes: z.number().describe("Episodes the user has watched"),
+          titleType: z
+            .enum(["movie", "tv"])
+            .describe("Movie (half-watched on the media server) or TV show"),
+          playback: z
+            .object({
+              positionSeconds: z.number().describe("Where playback stopped, in seconds"),
+              durationSeconds: z.number().describe("Runtime, in seconds"),
+            })
+            .nullable()
+            .describe("Where the user stopped this movie or the next episode on their media server"),
         })
-        .meta({ description: "An in-progress show with watch progress" }),
+        .meta({ description: "An in-progress show, or a half-watched movie or episode" }),
     ),
   })
   .meta({

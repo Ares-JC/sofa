@@ -73,6 +73,13 @@ export const continueWatching = os.library.continueWatching.use(authed).handler(
       : null,
     totalEpisodes: item.totalEpisodes,
     watchedEpisodes: item.watchedEpisodes,
+    titleType: item.title.type === "movie" ? ("movie" as const) : ("tv" as const),
+    playback: item.playback
+      ? {
+          positionSeconds: item.playback.positionSeconds,
+          durationSeconds: item.playback.durationSeconds,
+        }
+      : null,
   }));
   return { items };
 });
