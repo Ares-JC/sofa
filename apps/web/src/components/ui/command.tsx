@@ -57,21 +57,24 @@ function CommandDialog({
 
 function CommandInput({
   className,
+  inputSize = "default",
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: React.ComponentProps<typeof CommandPrimitive.Input> & { inputSize?: "default" | "lg" }) {
+  const large = inputSize === "lg";
   return (
-    <div data-slot="command-input-wrapper" className="p-1 pb-0">
-      <InputGroup className="bg-input/20 dark:bg-input/30 h-8!">
+    <div data-slot="command-input-wrapper" className={large ? "p-2 pb-1" : "p-1 pb-0"}>
+      <InputGroup className={cn("bg-input/20 dark:bg-input/30", large ? "h-11!" : "h-8!")}>
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "w-full text-[13px] leading-relaxed outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+            "w-full leading-relaxed outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+            large ? "text-base" : "text-[13px]",
             className,
           )}
           {...props}
         />
         <InputGroupAddon>
-          <IconSearch className="size-3.5 shrink-0 opacity-50" />
+          <IconSearch className={cn("shrink-0 opacity-50", large ? "size-4" : "size-3.5")} />
         </InputGroupAddon>
       </InputGroup>
     </div>

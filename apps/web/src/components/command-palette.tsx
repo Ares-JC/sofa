@@ -211,21 +211,22 @@ export function CommandPalette() {
           </DialogDescription>
         </DialogHeader>
         <DialogContent
-          className="top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0 sm:max-w-lg"
+          className="top-[15%] translate-y-0 overflow-hidden rounded-xl! p-0 sm:max-w-2xl"
           showCloseButton={false}
         >
           <Command shouldFilter={false}>
             <CommandInput
+              inputSize="lg"
               placeholder={t`Search movies & TV shows…`}
               value={query}
               onValueChange={setQuery}
             />
-            <CommandList className="max-h-80">
+            <CommandList className="max-h-[60vh] p-1">
               {hasQuery && loading && (
                 <div className="space-y-2 p-3">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={`skel-${i}`} className="flex items-center gap-3">
-                      <Skeleton className="h-12 w-8 shrink-0 rounded" />
+                      <Skeleton className="h-16 w-11 shrink-0 rounded-md" />
                       <div className="flex-1 space-y-1.5">
                         <Skeleton className="h-3.5 w-3/4" />
                         <Skeleton className="h-3 w-1/3" />
@@ -247,16 +248,16 @@ export function CommandPalette() {
                     <CommandItem
                       key={r.id ?? `${r.type}-${r.tmdbId}`}
                       onSelect={() => handleSelect(r)}
-                      className="flex items-center gap-3 py-2"
+                      className="flex items-center gap-4 rounded-lg px-3 py-2.5"
                     >
                       {r.type === "person" ? (
-                        <div className="bg-muted size-10 shrink-0 overflow-hidden rounded-full">
+                        <div className="bg-muted size-14 shrink-0 overflow-hidden rounded-full">
                           {r.profilePath ? (
                             <img
                               src={r.profilePath}
                               alt={r.title}
-                              width={40}
-                              height={40}
+                              width={56}
+                              height={56}
                               loading="lazy"
                               decoding="async"
                               className="h-full w-full object-cover"
@@ -265,19 +266,19 @@ export function CommandPalette() {
                             <div className="flex h-full items-center justify-center">
                               <IconUser
                                 aria-hidden={true}
-                                className="text-muted-foreground size-4"
+                                className="text-muted-foreground size-5"
                               />
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="bg-muted h-12 w-8 shrink-0 overflow-hidden rounded">
+                        <div className="bg-muted h-16 w-11 shrink-0 overflow-hidden rounded-md shadow-sm">
                           {r.posterPath ? (
                             <img
                               src={r.posterPath}
                               alt={r.title}
-                              width={32}
-                              height={48}
+                              width={44}
+                              height={64}
                               loading="lazy"
                               decoding="async"
                               className="h-full w-full object-cover"
@@ -290,14 +291,14 @@ export function CommandPalette() {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium">{r.title}</p>
-                        <div className="text-muted-foreground flex items-center gap-1.5 text-[10px]">
+                        <p className="truncate text-[15px] font-medium">{r.title}</p>
+                        <div className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
                           {r.type === "person" ? (
-                            <IconUser aria-hidden={true} className="size-[11px]" />
+                            <IconUser aria-hidden={true} className="size-3.5" />
                           ) : r.type === "movie" ? (
-                            <IconMovie aria-hidden={true} className="size-[11px]" />
+                            <IconMovie aria-hidden={true} className="size-3.5" />
                           ) : (
-                            <IconDeviceTv aria-hidden={true} className="size-[11px]" />
+                            <IconDeviceTv aria-hidden={true} className="size-3.5" />
                           )}
                           <span className="uppercase">
                             {r.type === "movie" ? t`movie` : r.type === "tv" ? t`tv` : t`person`}
