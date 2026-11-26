@@ -62,9 +62,12 @@ export function CollectionButton() {
   const isReleased = (date: string | null) => date != null && date <= today;
 
   const isWatched = (id: string) => overrides[id] ?? userStatuses[id] === "completed";
-  const watchedCount = movies.filter((item) => isWatched(item.id)).length;
-  const total = movies.length;
-  /** Every movie of the series watched: shown as an achievement in gold. */
+  // Count only released movies: an announced sequel shouldn't keep the series "incomplete".
+  const released = movies.filter((item) => isReleased(item.releaseDate));
+  const watchedCount = released.filter((item) => isWatched(item.id)).length;
+  const total = released.length;
+  const upcomingCount = movies.length - released.length;
+  /** Every released movie of the series watched: shown as an achievement in gold. */
   const complete = total > 0 && watchedCount === total;
 
   async function toggle(ids: string[], watched: boolean) {
@@ -143,6 +146,9 @@ export function CollectionButton() {
                     </span>
                   ) : (
                     t`${watchedCount} of ${total} movies watched`
+                  )}
+                  {upcomingCount > 0 && (
+                    <span className="text-muted-foreground"> · {t`${upcomingCount} coming soon`}</span>
                   )}
                 </DialogDescription>
               </div>

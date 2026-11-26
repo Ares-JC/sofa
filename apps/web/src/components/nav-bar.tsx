@@ -225,16 +225,16 @@ export function NavBar({
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="w-56">
-              <div className="flex items-center gap-3 px-2 py-2.5">
-                <Avatar className="size-9">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-72 p-1.5">
+              <div className="flex items-center gap-3 px-2.5 py-3">
+                <Avatar className="size-11">
                   <AvatarImage src={userImage} alt={userName} />
-                  <AvatarFallback className="bg-primary/10 font-display text-primary text-sm">
+                  <AvatarFallback className="bg-primary/10 font-display text-primary text-base">
                     {initial}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="text-foreground truncate text-sm leading-tight font-medium">
+                  <p className="text-foreground truncate text-[15px] leading-tight font-medium">
                     {userName}
                     {userRole === "admin" && (
                       <Badge className="bg-primary/10 text-primary ms-1.5 mb-0.5 rounded-md border-0 align-middle">
@@ -242,15 +242,15 @@ export function NavBar({
                       </Badge>
                     )}
                   </p>
-                  <p className="text-muted-foreground truncate text-xs">{userEmail}</p>
+                  <p className="text-muted-foreground mt-0.5 truncate text-[13px]">{userEmail}</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 render={<Link to="/settings" />}
-                className="cursor-pointer text-[13px]"
+                className="min-h-10 cursor-pointer gap-3 px-2.5 text-sm"
               >
-                <IconSettings className="size-3.5" />
+                <IconSettings className="size-4" />
                 <Trans>Settings</Trans>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -261,9 +261,9 @@ export function NavBar({
                   await navigate({ to: "/" });
                   resetUserState();
                 }}
-                className="cursor-pointer text-[13px]"
+                className="min-h-10 cursor-pointer gap-3 px-2.5 text-sm"
               >
-                <IconLogout className="size-3.5" />
+                <IconLogout className="size-4" />
                 <Trans>Sign out</Trans>
               </DropdownMenuItem>
             </DropdownMenuContent>

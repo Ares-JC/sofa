@@ -4215,3 +4215,7 @@ msgstr ""
 #: apps/web/src/components/titles/title-collection.tsx
 msgid "Collection complete!"
 msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "{upcomingCount} coming soon"
+msgstr ""

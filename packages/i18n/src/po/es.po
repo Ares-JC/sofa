@@ -4215,3 +4215,7 @@ msgstr "Volver"
 #: apps/web/src/components/titles/title-collection.tsx
 msgid "Collection complete!"
 msgstr "¡Colección completa!"
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "{upcomingCount} coming soon"
+msgstr "{upcomingCount} por estrenar"
