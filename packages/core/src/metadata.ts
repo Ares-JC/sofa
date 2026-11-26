@@ -878,6 +878,25 @@ function readAvailability(
   return result;
 }
 
+/** In-flight language refreshes, so repeated visits don't start duplicate downloads. */
+const languageRefreshes = new Map<string, Promise<void>>();
+
+function fetchedBeforeLanguageChange(lastFetchedAt: Date): boolean {
+  const changedAt = getMetadataLanguageChangedAt();
+  return changedAt != null && lastFetchedAt < changedAt;
+}
+
+function refreshInNewLanguage(titleId: string): Promise<void> {
+  const inflight = languageRefreshes.get(titleId);
+  if (inflight) return inflight;
+  const promise = refreshTitle(titleId)
+    .then(() => undefined)
+    .catch((err) => log.debug(`Language refresh failed for ${titleId}:`, err))
+    .finally(() => languageRefreshes.delete(titleId));
+  languageRefreshes.set(titleId, promise);
+  return promise;
+}
+
 export async function getOrFetchTitle(
   id: string,
   userId?: string,
@@ -916,6 +935,17 @@ export async function getOrFetchTitle(
       title = getTitleById(id) ?? title;
     } catch (err) {
       log.debug(`Failed to hydrate shell movie title ${id}:`, err);
+    }
+  }
+
+  // Fetched before the metadata language changed: re-download it in the new language. Movies are
+  // one request, so wait and show the translation right away; shows (all seasons) update in the
+  // background and appear translated on the next visit.
+  if (title.lastFetchedAt && fetchedBeforeLanguageChange(title.lastFetchedAt)) {
+    const refresh = refreshInNewLanguage(id);
+    if (title.type === "movie") {
+      await refresh;
+      title = getTitleById(id) ?? title;
     }
   }
 

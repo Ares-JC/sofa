@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { orpc } from "@/lib/orpc/client";
 import { invalidateTrackingQueries } from "@/lib/orpc/invalidate";
 
@@ -99,43 +100,62 @@ export function CollectionButton() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{collection.name}</DialogTitle>
-            <DialogDescription>
-              {t`${watchedCount} of ${total} movies watched`}
-            </DialogDescription>
+        <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+          <DialogHeader className="relative gap-1 overflow-hidden px-6 pt-8 pb-5">
+            {collection.backdropPath && (
+              <img
+                src={collection.backdropPath}
+                alt=""
+                aria-hidden={true}
+                className="absolute inset-0 h-full w-full object-cover opacity-30"
+              />
+            )}
+            <div className="from-background via-background/80 to-background/40 absolute inset-0 bg-gradient-to-t" />
+            <div className="relative space-y-3 pe-8">
+              <div className="space-y-1">
+                <DialogTitle className="font-display text-xl tracking-tight">
+                  {collection.name}
+                </DialogTitle>
+                <DialogDescription>{t`${watchedCount} of ${total} movies watched`}</DialogDescription>
+              </div>
+              <Progress value={total > 0 ? (watchedCount / total) * 100 : 0} />
+            </div>
           </DialogHeader>
 
-          <ul className="divide-border/50 -mx-1 divide-y">
+          <ul className="min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-3">
             {movies.map((item) => {
               const watched = isWatched(item.id);
               const busy = pending.has(item.id);
               const year = item.releaseDate?.slice(0, 4) ?? "";
               const current = item.id === titleId;
               return (
-                <li key={item.tmdbId} className="flex items-center gap-3 px-1 py-2">
+                <li
+                  key={item.tmdbId}
+                  className={`flex items-center gap-4 rounded-xl p-2.5 transition-colors ${current ? "bg-primary/10" : "hover:bg-accent/40"}`}
+                >
                   <Link
                     to="/titles/$id"
                     params={{ id: item.id }}
                     onClick={() => setOpen(false)}
-                    className="flex min-w-0 flex-1 items-center gap-3 rounded-md hover:opacity-80"
+                    className="flex min-w-0 flex-1 items-center gap-4"
                   >
-                    <div className="bg-muted h-16 w-11 shrink-0 overflow-hidden rounded">
+                    <div className="bg-muted h-[72px] w-12 shrink-0 overflow-hidden rounded-md shadow-md">
                       {item.posterPath && (
                         <img
                           src={item.posterPath}
                           alt=""
-                          width={44}
-                          height={64}
+                          width={48}
+                          height={72}
                           loading="lazy"
                           decoding="async"
                           className="h-full w-full object-cover"
                         />
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <p className={`truncate text-sm ${current ? "text-primary font-medium" : ""}`}>
+                    <div className="min-w-0 space-y-0.5">
+                      <p
+                        className={`line-clamp-2 text-sm leading-snug ${current ? "text-primary font-medium" : ""}`}
+                      >
                         {item.title}
                       </p>
                       <p className="text-muted-foreground text-xs">
@@ -150,7 +170,7 @@ export function CollectionButton() {
                     disabled={busy || (!watched && !isReleased(item.releaseDate))}
                     onClick={() => toggle([item.id], !watched)}
                     aria-label={watched ? t`Mark Unwatched` : t`Mark Watched`}
-                    className={watched ? "text-primary" : ""}
+                    className={`shrink-0 ${watched ? "text-primary" : ""}`}
                   >
                     {busy ? (
                       <IconLoader aria-hidden={true} className="size-3.5 animate-spin" />
@@ -165,15 +185,12 @@ export function CollectionButton() {
           </ul>
 
           {unwatchedIds.length > 1 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground justify-self-end tracking-wider uppercase"
-              onClick={() => toggle(unwatchedIds, true)}
-            >
-              <IconChecks aria-hidden={true} className="size-3.5" />
-              {t`Mark all watched`}
-            </Button>
+            <div className="border-border/50 flex justify-end border-t px-6 py-3">
+              <Button variant="ghost" size="sm" onClick={() => toggle(unwatchedIds, true)}>
+                <IconChecks aria-hidden={true} className="size-3.5" />
+                {t`Mark all watched`}
+              </Button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
