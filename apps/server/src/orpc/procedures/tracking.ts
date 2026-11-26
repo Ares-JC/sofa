@@ -3,7 +3,7 @@ import { ORPCError } from "@orpc/server";
 import { AppErrorCode } from "@sofa/api/errors";
 import type { WatchScopeType } from "@sofa/api/schemas";
 import { getWatchCount, getWatchHistory } from "@sofa/core/discovery";
-import { getOrFetchTitleByTmdbId } from "@sofa/core/metadata";
+import { episodeIdsForGroupSeason, getOrFetchTitleByTmdbId } from "@sofa/core/metadata";
 import {
   getDisplayStatusesByTitleIds,
   deleteWatch as deleteWatchRecord,
@@ -66,7 +66,12 @@ function handleWatch(userId: string, scope: WatchScopeType, ids: string[]) {
       }
       break;
     case "season":
-      for (const id of ids) watchSeason(userId, id);
+      for (const id of ids) {
+        const groupEpisodes = episodeIdsForGroupSeason(id);
+        if (groupEpisodes) {
+          if (groupEpisodes.length > 0) logEpisodeWatchBatch(userId, groupEpisodes);
+        } else watchSeason(userId, id);
+      }
       break;
     case "series":
       for (const id of ids) markAllEpisodesWatched(userId, id);
@@ -83,7 +88,12 @@ function handleUnwatch(userId: string, scope: WatchScopeType, ids: string[]) {
       for (const id of ids) unwatchEpisode(userId, id);
       break;
     case "season":
-      for (const id of ids) unwatchSeason(userId, id);
+      for (const id of ids) {
+        const groupEpisodes = episodeIdsForGroupSeason(id);
+        if (groupEpisodes) {
+          for (const episodeId of groupEpisodes) unwatchEpisode(userId, episodeId);
+        } else unwatchSeason(userId, id);
+      }
       break;
     case "series":
       for (const id of ids) unwatchSeries(userId, id);

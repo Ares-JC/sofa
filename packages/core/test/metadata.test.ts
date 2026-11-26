@@ -6,6 +6,7 @@ import type { TmdbMovieDetails, TmdbTvDetails, TmdbVideo } from "@sofa/tmdb/clie
 
 import {
   applyEpisodeGroup,
+  episodeIdsForGroupSeason,
   ensureBrowseTitlesExist,
   extractMovieContentRating,
   extractTvContentRating,
@@ -319,5 +320,15 @@ describe("applyEpisodeGroup", () => {
       seasons: [{ name: "X", order: 1, episodes: [[9, 9]] }],
     });
     expect(result).toBe(tmdbSeasons);
+  });
+});
+
+describe("episodeIdsForGroupSeason", () => {
+  test("ignores regular season IDs", () => {
+    expect(episodeIdsForGroupSeason("season-1")).toBeNull();
+  });
+
+  test("returns no episodes for an unknown title", () => {
+    expect(episodeIdsForGroupSeason("group:missing:1")).toEqual([]);
   });
 });

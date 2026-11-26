@@ -627,6 +627,18 @@ export function applyEpisodeGroup(
 }
 
 /** Fetch seasons from the DB, building the Season[] structure. */
+/**
+ * Episode IDs of a season from an alternative order ("group:<titleId>:<order>"), which only
+ * exists for display. Lets clients that mark whole seasons (e.g. the phone app) work with it.
+ */
+export function episodeIdsForGroupSeason(seasonId: string): string[] | null {
+  if (!seasonId.startsWith(GROUP_SEASON_ID_PREFIX)) return null;
+  const rest = seasonId.slice(GROUP_SEASON_ID_PREFIX.length);
+  const titleId = rest.slice(0, rest.lastIndexOf(":"));
+  const season = fetchSeasonsFromDb(titleId).find((s) => s.id === seasonId);
+  return season ? season.episodes.map((ep) => ep.id) : [];
+}
+
 function fetchSeasonsFromDb(titleId: string): Season[] {
   const tmdbSeasons = fetchTmdbSeasonsFromDb(titleId);
   const group = getTitleById(titleId)?.episodeGroup;
