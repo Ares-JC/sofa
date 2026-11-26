@@ -122,6 +122,15 @@ export const titles = sqliteTable(
     trailerCheckedAt: int("trailerCheckedAt", { mode: "timestamp" }),
     tvdbCheckedAt: int("tvdbCheckedAt", { mode: "timestamp" }),
     lastFetchedAt: int("lastFetchedAt", { mode: "timestamp" }),
+    /**
+     * Alternative season grouping (a TMDB episode group) used to display this show's seasons,
+     * e.g. as released on streaming/TVDB. Null = TMDB's own seasons. Episodes keep their rows.
+     */
+    episodeGroup: text("episodeGroup", { mode: "json" }).$type<{
+      id: string;
+      name: string;
+      seasons: { name: string; order: number; episodes: [number, number][] }[];
+    }>(),
   },
   (table) => [
     uniqueIndex("titles_tmdbId_type_unique").on(table.tmdbId, table.type),

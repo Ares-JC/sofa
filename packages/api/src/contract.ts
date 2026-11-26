@@ -16,6 +16,7 @@ import {
   DiscoverInput,
   DiscoverOutput,
   DiscoverRecommendationsOutput,
+  EpisodeOrdersOutput,
   FilenameParam,
   GenresOutput,
   IdParam,
@@ -44,6 +45,7 @@ import {
   RestoreBackupInput,
   SearchInput,
   SearchOutput,
+  SetEpisodeOrderInput,
   SystemHealthOutput,
   SystemStatusOutput,
   TitleDetailOutput,
@@ -53,13 +55,13 @@ import {
   TriggerJobInput,
   TriggerJobOutput,
   UnwatchInput,
+  UpcomingInput,
+  UpcomingOutput,
   UpdateNameInput,
   UpdateRatingInput,
   UpdateScheduleInput,
   UpdateStatusInput,
   UpdateUserPlatformsInput,
-  UpcomingInput,
-  UpcomingOutput,
   UploadAvatarInput,
   UploadAvatarOutput,
   UserInfoOutput,
@@ -115,6 +117,34 @@ export const contract = {
       )
       .input(IdParam)
       .output(TitleRecommendationsOutput),
+    episodeOrders: oc
+      .meta(
+        openapi({
+          method: "GET",
+          path: "/titles/{id}/episode-orders",
+          tags: ["Titles"],
+          summary: "List season orderings",
+          description:
+            "List the alternative season orderings (TMDB episode groups) available for a TV show, and which one is in use.",
+          successDescription: "Available orderings and the current one",
+        }),
+      )
+      .input(IdParam)
+      .output(EpisodeOrdersOutput),
+    setEpisodeOrder: oc
+      .meta(
+        openapi({
+          method: "PUT",
+          path: "/titles/{id}/episode-order",
+          tags: ["Titles"],
+          summary: "Set season ordering",
+          description:
+            "Arrange a TV show's seasons using a TMDB episode group (e.g. as released on streaming), or null for TMDB's own seasons. Display only: watches are kept. Admin only, since it applies to every user.",
+          successDescription: "The ordering now in use",
+        }),
+      )
+      .input(SetEpisodeOrderInput)
+      .output(EpisodeOrdersOutput.pick({ current: true })),
   },
 
   // ─── Tracking ───────────────────────────────────────────────

@@ -13,6 +13,8 @@ export const implementedRouter = {
   titles: {
     get: titles.get,
     similar: titles.similar,
+    episodeOrders: titles.episodeOrders,
+    setEpisodeOrder: titles.setEpisodeOrder,
   },
   tracking: {
     watch: tracking.watch,

@@ -4103,3 +4103,55 @@ msgstr "Ocultar lo que ya está en mi biblioteca"
 #: apps/web/src/components/dashboard/continue-watching-card.tsx
 msgid "Resume · {remaining} min left"
 msgstr "Continuar · quedan {remaining} min"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Season order"
+msgstr "Orden de temporadas"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Arrange seasons as"
+msgstr "Organizar temporadas como"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "TMDB seasons (default)"
+msgstr "Temporadas de TMDB (predeterminado)"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "{seasons} seasons · {episodes} episodes"
+msgstr "{seasons} temporadas · {episodes} capítulos"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "TMDB has no other orderings for this show."
+msgstr "TMDB no tiene otros órdenes para esta serie."
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Season order updated"
+msgstr "Orden de temporadas actualizado"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Failed to change the season order"
+msgstr "No se pudo cambiar el orden de temporadas"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Original air date"
+msgstr "Fecha de emisión"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Absolute"
+msgstr "Absoluto"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "DVD"
+msgstr "DVD"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Digital"
+msgstr "Digital"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Story arc"
+msgstr "Arco argumental"
+
+#: apps/web/src/components/titles/season-order-menu.tsx
+msgid "Production"
+msgstr "Producción"

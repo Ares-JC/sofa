@@ -5,6 +5,7 @@ import { clearAllTables, insertTitle, testDb } from "@sofa/test/db";
 import type { TmdbMovieDetails, TmdbTvDetails, TmdbVideo } from "@sofa/tmdb/client";
 
 import {
+  applyEpisodeGroup,
   ensureBrowseTitlesExist,
   extractMovieContentRating,
   extractTvContentRating,
@@ -274,5 +275,49 @@ describe("ensureBrowseTitlesExist", () => {
   test("returns empty map for empty input", () => {
     const result = ensureBrowseTitlesExist([]);
     expect(result.size).toBe(0);
+  });
+});
+
+// ── applyEpisodeGroup ───────────────────────────────────────────────
+
+describe("applyEpisodeGroup", () => {
+  const ep = (episodeNumber: number) => ({
+    id: `e${episodeNumber}`,
+    episodeNumber,
+    name: `Episode ${episodeNumber}`,
+    overview: null,
+    stillPath: null,
+    stillThumbHash: null,
+    airDate: null,
+    runtimeMinutes: null,
+  });
+  const tmdbSeasons = [
+    { id: "s1", seasonNumber: 1, name: "Season 1", episodes: [1, 2, 3, 4].map(ep) },
+  ];
+
+  test("splits TMDB's single season into the group's seasons, keeping episode IDs", () => {
+    const result = applyEpisodeGroup("t1", tmdbSeasons, {
+      id: "g1",
+      name: "Seasons",
+      seasons: [
+        { name: "Part 2", order: 2, episodes: [[1, 3], [1, 4]] },
+        { name: "Part 1", order: 1, episodes: [[1, 1], [1, 2]] },
+      ],
+    });
+    expect(result.map((s) => s.name)).toEqual(["Part 1", "Part 2"]);
+    expect(result[1].id).toBe("group:t1:2");
+    expect(result[1].episodes.map((e) => [e.id, e.episodeNumber])).toEqual([
+      ["e3", 1],
+      ["e4", 2],
+    ]);
+  });
+
+  test("falls back to TMDB seasons when the group matches nothing", () => {
+    const result = applyEpisodeGroup("t1", tmdbSeasons, {
+      id: "g1",
+      name: "Empty",
+      seasons: [{ name: "X", order: 1, episodes: [[9, 9]] }],
+    });
+    expect(result).toBe(tmdbSeasons);
   });
 });

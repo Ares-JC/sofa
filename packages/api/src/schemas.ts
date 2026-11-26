@@ -590,10 +590,43 @@ export const TitleDetailOutput = z
     seasons: z.array(SeasonSchema).describe("TV seasons (empty for movies)"),
     availability: z.array(AvailabilityOfferSchema).describe("Streaming availability offers"),
     cast: z.array(CastMemberSchema).describe("Cast and crew credits"),
+    episodeOrder: z
+      .object({ id: z.string(), name: z.string() })
+      .nullable()
+      .describe("TMDB episode group used to arrange seasons (null = TMDB's own seasons)"),
   })
   .meta({
     description: "Full title details with seasons, cast, and streaming availability",
   });
+
+export const EpisodeOrdersOutput = z
+  .object({
+    current: z
+      .object({ id: z.string(), name: z.string() })
+      .nullable()
+      .describe("Episode group in use (null = TMDB's own seasons)"),
+    groups: z
+      .array(
+        z.object({
+          id: z.string().describe("TMDB episode group ID"),
+          name: z.string().describe("Group name"),
+          type: z
+            .number()
+            .describe("1 air date, 2 absolute, 3 DVD, 4 digital, 5 story arc, 6 production, 7 TV"),
+          seasonCount: z.number().describe("Number of seasons in the group"),
+          episodeCount: z.number().describe("Number of episodes in the group"),
+        }),
+      )
+      .describe("Alternative season orderings available on TMDB"),
+  })
+  .meta({ description: "Season orderings available for a TV show" });
+
+export const SetEpisodeOrderInput = z
+  .object({
+    id: z.string().describe("Title ID"),
+    groupId: z.string().nullable().describe("TMDB episode group ID, or null for TMDB's seasons"),
+  })
+  .meta({ description: "Choose how a TV show's seasons are arranged" });
 
 export const UserInfoOutput = z
   .object({

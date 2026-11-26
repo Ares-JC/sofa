@@ -2,11 +2,11 @@ import { ORPCError } from "@orpc/server";
 
 import { AppErrorCode } from "@sofa/api/errors";
 import { getRecommendationsForTitle } from "@sofa/core/discovery";
-import { getOrFetchTitle } from "@sofa/core/metadata";
+import { getOrFetchTitle, listEpisodeGroups, setEpisodeGroup } from "@sofa/core/metadata";
 import { getDisplayStatusesByTitleIds } from "@sofa/core/tracking";
 
 import { os } from "../context";
-import { authed } from "../middleware";
+import { admin, authed } from "../middleware";
 
 export const get = os.titles.get.use(authed).handler(async ({ input, context }) => {
   const result = await getOrFetchTitle(input.id, context.user.id);
@@ -26,3 +26,12 @@ export const similar = os.titles.similar.use(authed).handler(({ input, context }
   );
   return { recommendations: recs, userStatuses };
 });
+
+export const episodeOrders = os.titles.episodeOrders
+  .use(authed)
+  .handler(({ input }) => listEpisodeGroups(input.id));
+
+// Titles are shared by every user, so changing how a show is arranged is admin-only.
+export const setEpisodeOrder = os.titles.setEpisodeOrder
+  .use(admin)
+  .handler(({ input }) => setEpisodeGroup(input.id, input.groupId));

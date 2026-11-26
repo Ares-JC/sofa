@@ -27,6 +27,7 @@ import type { Season } from "@sofa/api/schemas";
 import { formatShortDate } from "@sofa/i18n/format";
 
 import { LogWatchDialog } from "./log-watch-dialog";
+import { SeasonOrderMenu } from "./season-order-menu";
 import { useTitleContext, useTitleUserInfo } from "./title-context";
 import { useTitleActions } from "./use-title-actions";
 
@@ -103,6 +104,8 @@ export function TitleSeasons({
             <Trans>Episodes</Trans>
           </h2>
         </div>
+        <div className="flex items-center gap-1">
+        <SeasonOrderMenu />
         {userStatus !== "completed" && (
           <AlertDialog open={markAllOpen} onOpenChange={setMarkAllOpen}>
             <AlertDialogTrigger
@@ -145,6 +148,7 @@ export function TitleSeasons({
             </AlertDialogContent>
           </AlertDialog>
         )}
+        </div>
       </div>
       <div className="space-y-2">
         {seasons.map((season) => {

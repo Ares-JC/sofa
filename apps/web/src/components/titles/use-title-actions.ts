@@ -16,6 +16,17 @@ type UserInfo = {
   episodeWatches: string[];
 };
 
+
+/**
+ * Seasons from an alternative episode order (see SeasonOrderMenu) only exist for display, so
+ * mark their episodes individually instead of by season ID.
+ */
+function seasonWatchInput(season: Season) {
+  return season.id.startsWith("group:")
+    ? { scope: "episode" as const, ids: season.episodes.map((ep) => ep.id) }
+    : { scope: "season" as const, ids: [season.id] };
+}
+
 export function useTitleActions() {
   const { t } = useLingui();
   const { titleId, titleName, seasons, setWatchingEp } = useTitleContext();
@@ -275,7 +286,7 @@ export function useTitleActions() {
       }));
 
       try {
-        await watch({ scope: "season", ids: [season.id] });
+        await watch(seasonWatchInput(season));
         await queryClient.invalidateQueries({ queryKey: userInfoKey });
 
         const currentWatchSet = new Set(getUserInfo().episodeWatches);
@@ -330,7 +341,7 @@ export function useTitleActions() {
       }));
 
       try {
-        await unwatch({ scope: "season", ids: [season.id] });
+        await unwatch(seasonWatchInput(season));
         const seasonNumber = season.seasonNumber;
         const seasonLabel = season.name ?? t`Season ${seasonNumber}`;
         toast.success(t`Unwatched all of ${seasonLabel}`);

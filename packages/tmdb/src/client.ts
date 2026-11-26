@@ -222,6 +222,45 @@ export async function getTvDetails(tmdbId: number) {
   return data as TmdbTvDetails;
 }
 
+export interface TmdbEpisodeGroupSummary {
+  id: string;
+  name: string;
+  description?: string;
+  /** 1 original air date, 2 absolute, 3 DVD, 4 digital, 5 story arc, 6 production, 7 TV. */
+  type: number;
+  group_count: number;
+  episode_count: number;
+}
+
+/** Alternative episode orderings (e.g. seasons as released on streaming or TVDB). */
+export async function getTvEpisodeGroups(tmdbId: number) {
+  const { data, error } = await client.GET("/3/tv/{series_id}/episode_groups", {
+    params: { path: { series_id: tmdbId } },
+  });
+  if (error) throw new Error(`TMDB API error: tv/${tmdbId}/episode_groups`);
+  return ((data as { results?: TmdbEpisodeGroupSummary[] }).results ?? []).filter(
+    (g) => g.id && g.name,
+  );
+}
+
+export interface TmdbEpisodeGroupDetails {
+  id: string;
+  name: string;
+  groups: {
+    name: string;
+    order: number;
+    episodes: { season_number: number; episode_number: number; order: number }[];
+  }[];
+}
+
+export async function getEpisodeGroupDetails(groupId: string) {
+  const { data, error } = await client.GET("/3/tv/episode_group/{tv_episode_group_id}", {
+    params: { path: { tv_episode_group_id: groupId } },
+  });
+  if (error) throw new Error(`TMDB API error: tv/episode_group/${groupId}`);
+  return data as unknown as TmdbEpisodeGroupDetails;
+}
+
 export async function getTvExternalIds(tmdbId: number) {
   const { data, error } = await client.GET("/3/tv/{series_id}/external_ids", {
     params: { path: { series_id: tmdbId } },

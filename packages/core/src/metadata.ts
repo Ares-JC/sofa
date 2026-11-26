@@ -36,10 +36,12 @@ import type { titles } from "@sofa/db/schema";
 import { createLogger } from "@sofa/logger";
 import type { TmdbMovieDetails, TmdbTvDetails, TmdbVideo } from "@sofa/tmdb/client";
 import {
+  getEpisodeGroupDetails,
   getMovieDetails,
   getRecommendations,
   getSimilar,
   getTvDetails,
+  getTvEpisodeGroups,
   getTvSeasonDetails,
   getVideos,
 } from "@sofa/tmdb/client";
@@ -563,8 +565,111 @@ export async function refreshRecommendations(titleId: string) {
   }
 }
 
+export type EpisodeGroupMapping = NonNullable<(typeof titles.$inferSelect)["episodeGroup"]>;
+
+/** Prefix for the IDs of display-only seasons built from an episode group. */
+export const GROUP_SEASON_ID_PREFIX = "group:";
+
+/**
+ * Re-arrange a show's TMDB seasons into an episode group's seasons (display only: episodes keep
+ * their IDs, so watches are unaffected). Episodes the group leaves out stay in their TMDB season.
+ */
+export function applyEpisodeGroup(
+  titleId: string,
+  tmdbSeasons: Season[],
+  group: EpisodeGroupMapping,
+): Season[] {
+  const byNumber = new Map<string, Episode>();
+  for (const season of tmdbSeasons) {
+    for (const ep of season.episodes) {
+      byNumber.set(`${season.seasonNumber}:${ep.episodeNumber}`, ep);
+    }
+  }
+
+  const used = new Set<string>();
+  const grouped: Season[] = [];
+  for (const groupSeason of [...group.seasons].sort((a, b) => a.order - b.order)) {
+    const episodes: Episode[] = [];
+    for (const [seasonNumber, episodeNumber] of groupSeason.episodes) {
+      const key = `${seasonNumber}:${episodeNumber}`;
+      const ep = byNumber.get(key);
+      if (!ep || used.has(key)) continue;
+      used.add(key);
+      episodes.push({ ...ep, episodeNumber: episodes.length + 1 });
+    }
+    if (episodes.length === 0) continue;
+    grouped.push({
+      id: `${GROUP_SEASON_ID_PREFIX}${titleId}:${groupSeason.order}`,
+      seasonNumber: groupSeason.order,
+      name: groupSeason.name,
+      episodes,
+    });
+  }
+
+  if (grouped.length === 0) return tmdbSeasons;
+
+  // Keep anything the group doesn't cover (e.g. episodes newer than the group) visible.
+  for (const season of tmdbSeasons) {
+    const leftover = season.episodes.filter(
+      (ep) => !used.has(`${season.seasonNumber}:${ep.episodeNumber}`),
+    );
+    if (leftover.length > 0 && leftover.length === season.episodes.length) grouped.push(season);
+  }
+  return grouped;
+}
+
 /** Fetch seasons from the DB, building the Season[] structure. */
 function fetchSeasonsFromDb(titleId: string): Season[] {
+  const tmdbSeasons = fetchTmdbSeasonsFromDb(titleId);
+  const group = getTitleById(titleId)?.episodeGroup;
+  return group ? applyEpisodeGroup(titleId, tmdbSeasons, group) : tmdbSeasons;
+}
+
+/** The alternative season orderings TMDB has for a show, and which one is in use. */
+export async function listEpisodeGroups(titleId: string) {
+  const title = getTitleById(titleId);
+  if (!title || title.type !== "tv") return { current: null, groups: [] };
+  const groups = await getTvEpisodeGroups(title.tmdbId);
+  return {
+    current: title.episodeGroup
+      ? { id: title.episodeGroup.id, name: title.episodeGroup.name }
+      : null,
+    groups: groups.map((g) => ({
+      id: g.id,
+      name: g.name,
+      type: g.type,
+      seasonCount: g.group_count,
+      episodeCount: g.episode_count,
+    })),
+  };
+}
+
+/** Display a show's seasons using a TMDB episode group (null = TMDB's own seasons). */
+export async function setEpisodeGroup(titleId: string, groupId: string | null) {
+  const title = getTitleById(titleId);
+  if (!title || title.type !== "tv") throw new Error("Not a TV show");
+  if (!groupId) {
+    updateTitleFields(titleId, { episodeGroup: null });
+    return { current: null };
+  }
+  const details = await getEpisodeGroupDetails(groupId);
+  const mapping: EpisodeGroupMapping = {
+    id: details.id,
+    name: details.name,
+    seasons: (details.groups ?? []).map((g) => ({
+      name: g.name,
+      order: g.order,
+      episodes: [...(g.episodes ?? [])]
+        .sort((a, b) => a.order - b.order)
+        .map((e) => [e.season_number, e.episode_number] as [number, number]),
+    })),
+  };
+  updateTitleFields(titleId, { episodeGroup: mapping });
+  return { current: { id: mapping.id, name: mapping.name } };
+}
+
+/** TMDB's own seasons from the DB. */
+function fetchTmdbSeasonsFromDb(titleId: string): Season[] {
   const seasonRows = getSeasonsForTitle(titleId);
 
   if (seasonRows.length === 0) return [];
@@ -868,6 +973,9 @@ export async function getOrFetchTitle(
   return {
     title: resolvedTitle,
     seasons: titleSeasons,
+    episodeOrder: title.episodeGroup
+      ? { id: title.episodeGroup.id, name: title.episodeGroup.name }
+      : null,
     availability,
     cast,
   };
