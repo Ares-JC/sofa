@@ -884,6 +884,7 @@ export async function getOrFetchTitle(
 ): Promise<{
   title: ResolvedTitle;
   seasons: Season[];
+  episodeOrder: { id: string; name: string } | null;
   availability: AvailabilityOffer[];
   cast: CastMember[];
 } | null> {
