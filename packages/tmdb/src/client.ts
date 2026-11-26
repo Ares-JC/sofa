@@ -241,14 +241,14 @@ export function applyDetailFallback<T extends { overview?: string | null; transl
 ): T {
   if (metadataLanguage === "en-US") return data;
   const translations = data.translations as TmdbTranslations | undefined;
-  const result = { ...data } as T & Record<string, unknown>;
+  const result: Record<string, unknown> = { ...data };
   const title = pickTranslation(translations, titleField);
   if (title) result[titleField] = title;
   if (!data.overview?.trim()) {
     const overview = pickTranslation(translations, "overview");
     if (overview) result.overview = overview;
   }
-  return result;
+  return result as T;
 }
 
 /** Translated detail requests also fetch all translations for the fallback above. */
