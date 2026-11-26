@@ -53,6 +53,9 @@ export const auth = betterAuth({
     },
   },
   session: {
+    // Self-hosted personal app: stay signed in for 30 days, extended (at most daily) while in use.
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60,

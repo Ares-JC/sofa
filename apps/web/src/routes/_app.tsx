@@ -4,12 +4,12 @@ import { CommandPalette } from "@/components/command-palette";
 import { MobileTabBar, NavBar } from "@/components/nav-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateToast } from "@/components/update-toast";
-import { authClient } from "@/lib/auth/client";
+import { loadSession } from "@/lib/auth/client";
 import { client } from "@/lib/orpc/client";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
-    const { data: session } = await authClient.getSession();
+    const session = await loadSession();
     if (!session) throw redirect({ to: "/login" });
 
     let updateCheck = null;
