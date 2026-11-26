@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 const DECADE_PRESETS = [
@@ -118,6 +119,8 @@ export function DiscoverSection() {
         }),
       );
   }, [data?.pages]);
+  const hideInLibrary = useHideInLibrary();
+  const visibleItems = withoutLibraryTitles(items, hideInLibrary, (item) => item.userStatus);
 
   const genres = genreData?.genres ?? [];
   const providers = providerData?.platforms ?? [];
@@ -393,13 +396,13 @@ export function DiscoverSection() {
         <div className="flex items-center justify-center py-12">
           <IconLoader className="text-muted-foreground size-6 animate-spin" />
         </div>
-      ) : items.length === 0 ? (
+      ) : visibleItems.length === 0 ? (
         <p className="text-muted-foreground py-12 text-center text-sm">
           {t`No titles found. Try adjusting your filters.`}
         </p>
       ) : (
         <>
-          <TitleGrid items={items} />
+          <TitleGrid items={visibleItems} />
           <div ref={sentinelRef} />
           {isFetchingNextPage && (
             <div className="flex items-center justify-center py-4">

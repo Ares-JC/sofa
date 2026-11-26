@@ -6,6 +6,7 @@ import { TitleCard, TitleCardSkeleton } from "@/components/title-card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 interface Genre {
@@ -105,6 +106,12 @@ export function FilterableTitleRow({
   const isLoading = selectedGenre !== null && isPending;
   const items = selectedGenre === null ? defaultItems : discoverItems;
   const userStatuses = selectedGenre === null ? initialStatuses : discoverStatuses;
+  const hideInLibrary = useHideInLibrary();
+  const visibleItems = withoutLibraryTitles(
+    items,
+    hideInLibrary,
+    (item: TitleRowItem) => userStatuses[item.id],
+  );
   const episodeProgress = selectedGenre === null ? initialProgress : discoverProgress;
 
   function toggleGenre(genreId: number) {
@@ -158,7 +165,7 @@ export function FilterableTitleRow({
       )}
 
       {/* Title cards */}
-      {!isLoading && items.length > 0 && (
+      {!isLoading && visibleItems.length > 0 && (
         <ScrollArea
           key={selectedGenre ?? "default"}
           scrollFade
@@ -167,7 +174,7 @@ export function FilterableTitleRow({
           scrollRef={scrollRef}
         >
           <div className="flex gap-4 px-6 py-2 sm:px-2">
-            {items.map((item: TitleRowItem, i: number) => (
+            {visibleItems.map((item: TitleRowItem, i: number) => (
               <div key={item.id} className="w-[140px] shrink-0 sm:w-[160px]">
                 <div
                   className="animate-stagger-item"

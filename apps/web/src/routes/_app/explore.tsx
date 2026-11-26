@@ -10,6 +10,8 @@ import { HeroBanner } from "@/components/explore/hero-banner";
 import { TitleRow } from "@/components/explore/title-row";
 import { RouteError } from "@/components/route-error";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { setHideInLibrary, useHideInLibrary } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 export const Route = createFileRoute("/_app/explore")({
@@ -103,6 +105,7 @@ function ExplorePage() {
   );
 
   const isPending = trendingPending || moviesPending || tvPending;
+  const hideInLibrary = useHideInLibrary();
 
   const trendingItems = useMemo(
     () => trendingData?.pages.flatMap((p) => p.items) ?? [],
@@ -137,6 +140,15 @@ function ExplorePage() {
           voteAverage={hero.voteAverage}
         />
       )}
+
+      <label className="flex w-fit cursor-pointer items-center gap-2">
+        <Switch
+          size="sm"
+          checked={hideInLibrary}
+          onCheckedChange={(checked) => setHideInLibrary(checked)}
+        />
+        <span className="text-muted-foreground text-xs">{t`Hide titles in my library`}</span>
+      </label>
 
       <div>
         <TitleRow

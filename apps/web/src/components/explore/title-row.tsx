@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { TitleCard } from "@/components/title-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 
 const noop = () => {};
 
@@ -50,7 +51,14 @@ export function TitleRow({
     rootMargin: "0px 400px 0px 0px",
   });
 
-  if (items.length === 0) return null;
+  const hideInLibrary = useHideInLibrary();
+  const visibleItems = withoutLibraryTitles(
+    items,
+    hideInLibrary,
+    (item) => userStatuses?.[item.id],
+  );
+
+  if (visibleItems.length === 0) return null;
 
   return (
     <section className="space-y-4">
@@ -60,7 +68,7 @@ export function TitleRow({
       </div>
       <ScrollArea scrollFade hideScrollbar className="-mx-6 sm:-mx-2" scrollRef={scrollRef}>
         <div className="flex gap-4 px-6 py-2 sm:px-2">
-          {items.map((item, i) => (
+          {visibleItems.map((item, i) => (
             <div key={item.id} className="w-[140px] shrink-0 sm:w-[160px]">
               <div
                 className="animate-stagger-item"
