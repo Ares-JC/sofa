@@ -3,6 +3,7 @@ import {
   IconBooks,
   IconCalendarEvent,
   IconCompass,
+  IconHistory,
   IconHome,
   IconLogout,
   IconSearch,
@@ -29,8 +30,8 @@ import { useResetUserState } from "@/hooks/use-reset-user-state";
 import { commandPaletteOpenAtom } from "@/lib/atoms/command-palette";
 import { signOut } from "@/lib/auth/client";
 
-/** Horizontal inset (px) of the desktop indicator within each link (Tailwind `inset-x-2`). */
-const DESKTOP_INDICATOR_INSET = 8;
+/** Horizontal inset (px) of the desktop indicator; 0 = the highlight covers the whole link. */
+const DESKTOP_INDICATOR_INSET = 0;
 /** Width (px) of the mobile indicator bar (Tailwind `w-8` = 2rem). */
 const MOBILE_INDICATOR_WIDTH = 32;
 
@@ -121,11 +122,11 @@ export function NavBar({
   const setCommandPaletteOpen = useSetAtom(commandPaletteOpenAtom);
 
   const navLinks = [
-    { href: "/dashboard", label: t`Home` },
-    { href: "/library", label: t`Library` },
-    { href: "/explore", label: t`Explore` },
-    { href: "/upcoming", label: t`Upcoming` },
-    { href: "/history", label: t`History` },
+    { href: "/dashboard", label: t`Home`, icon: IconHome },
+    { href: "/library", label: t`Library`, icon: IconBooks },
+    { href: "/explore", label: t`Explore`, icon: IconCompass },
+    { href: "/upcoming", label: t`Upcoming`, icon: IconCalendarEvent },
+    { href: "/history", label: t`History`, icon: IconHistory },
   ] as const;
 
   const initial = userName?.charAt(0).toUpperCase() ?? "?";
@@ -165,15 +166,20 @@ export function NavBar({
                   }}
                   to={link.href}
                   aria-current={isActive ? "page" : undefined}
-                  className="text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:ring-primary/40 relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className={`focus-visible:ring-primary/40 relative z-10 inline-flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm lg:px-3.5 lg:text-[15px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
                 >
+                  <link.icon aria-hidden={true} className="hidden size-4 lg:block" />
                   {link.label}
                 </Link>
               );
             })}
             {indicator && (
               <motion.div
-                className="bg-primary absolute -bottom-[11px] h-0.5 rounded-full"
+                className="border-primary/40 bg-primary/10 absolute inset-y-0 rounded-lg border shadow-[0_0_14px_-4px] shadow-primary/40"
                 initial={false}
                 animate={{ left: indicator.left, width: indicator.width }}
                 transition={desktopInstant ? { duration: 0 } : springTransition}

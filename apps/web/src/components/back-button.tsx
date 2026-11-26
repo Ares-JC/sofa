@@ -16,14 +16,14 @@ export function BackButton({ className }: { className?: string }) {
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant="outline"
+      size="lg"
       onClick={() => {
         if (canGoBack) router.history.back();
         else void router.navigate({ to: "/dashboard" });
       }}
       className={cn(
-        "bg-background/60 hover:bg-background/80 rounded-full ps-2.5 pe-3.5 backdrop-blur-md",
+        "border-border/60 bg-background/60 hover:border-primary/50 hover:bg-primary/15 hover:text-primary h-9 rounded-lg ps-3 pe-4 text-sm backdrop-blur-md transition-colors hover:shadow-[0_0_14px_-4px] hover:shadow-primary/50",
         className,
       )}
     >
