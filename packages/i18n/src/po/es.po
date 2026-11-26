@@ -4047,3 +4047,55 @@ msgstr "Registrar en una fecha…"
 #: apps/web/src/components/titles/log-watch-dialog.tsx
 msgid "Record when you watched {episodeLabel}."
 msgstr "Indica cuándo viste {episodeLabel}."
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Whose watches to log"
+msgstr "De quién registrar lo que ve"
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Finish watching something on {label} and its accounts will show up here to choose from."
+msgstr "Termina de ver algo en {label} y sus cuentas aparecerán aquí para elegir."
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Only the checked accounts are logged. Uncheck all to log everyone."
+msgstr "Solo se registran las cuentas marcadas. Desmarca todas para registrar a todos."
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Only logging the user named “{0}”. It switches to their account automatically the next time they finish something."
+msgstr "Solo se registra al usuario llamado “{0}”. Pasará a su cuenta automáticamente la próxima vez que termine algo."
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Logging everyone on the server. Check accounts to only log theirs."
+msgstr "Se registra a todos en el servidor. Marca cuentas para registrar solo las suyas."
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Logged"
+msgstr "Registrado"
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Ignored"
+msgstr "Ignorado"
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Recent activity"
+msgstr "Actividad reciente"
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Nothing received yet."
+msgstr "Aún no se ha recibido nada."
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Hidden (another user)"
+msgstr "Oculto (otro usuario)"
+
+#: apps/web/src/components/settings/integration-card.tsx
+msgid "{label} accounts saved"
+msgstr "Cuentas de {label} guardadas"
+
+#: apps/web/src/components/settings/integration-card.tsx
+msgid "Failed to save {label} accounts"
+msgstr "No se pudieron guardar las cuentas de {label}"
+
+#: apps/web/src/routes/_app/explore.tsx
+msgid "Hide titles in my library"
+msgstr "Ocultar lo que ya está en mi biblioteca"

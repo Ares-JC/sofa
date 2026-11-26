@@ -4047,3 +4047,55 @@ msgstr ""
 #: apps/web/src/components/titles/log-watch-dialog.tsx
 msgid "Record when you watched {episodeLabel}."
 msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Whose watches to log"
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Finish watching something on {label} and its accounts will show up here to choose from."
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Only the checked accounts are logged. Uncheck all to log everyone."
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Only logging the user named “{0}”. It switches to their account automatically the next time they finish something."
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Logging everyone on the server. Check accounts to only log theirs."
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Logged"
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Ignored"
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Recent activity"
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Nothing received yet."
+msgstr ""
+
+#: apps/web/src/components/settings/integration-activity.tsx
+msgid "Hidden (another user)"
+msgstr ""
+
+#: apps/web/src/components/settings/integration-card.tsx
+msgid "{label} accounts saved"
+msgstr ""
+
+#: apps/web/src/components/settings/integration-card.tsx
+msgid "Failed to save {label} accounts"
+msgstr ""
+
+#: apps/web/src/routes/_app/explore.tsx
+msgid "Hide titles in my library"
+msgstr ""
