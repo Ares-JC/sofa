@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   episodes,
   integrationEvents,
+  integrations,
   userEpisodeWatches,
   userMovieWatches,
 } from "@sofa/db/schema";
@@ -17,6 +18,7 @@ import {
 } from "@sofa/test/db";
 
 import {
+  isAccountAllowed,
   matchesServerUsername,
   normalizeShowTitle,
   parseEmbyPayload,
@@ -912,5 +914,68 @@ describe("episode matching across numbering schemes", () => {
     expect(result.status).toBe("success");
     expect(mockResolveShowTmdbId).not.toHaveBeenCalled();
     expect(mockGetOrFetchTitleByTmdbId).toHaveBeenCalledWith(259140, "tv");
+  });
+});
+
+describe("account IDs", () => {
+  test("reads the Plex account ID", () => {
+    const result = parsePlexPayload(
+      makePlexForm({
+        event: "media.scrobble",
+        Account: { id: 12345, title: "christian" },
+        Metadata: { type: "movie", title: "Inception", Guid: [{ id: "tmdb://27205" }] },
+      }),
+    );
+    expect(result?.accountId).toBe("12345");
+  });
+
+  test("reads Jellyfin and Emby account IDs", () => {
+    const jellyfin = parseJellyfinPayload({
+      NotificationType: "PlaybackStop",
+      PlayedToCompletion: true,
+      ItemType: "Movie",
+      Name: "The Matrix",
+      UserId: "abc",
+    });
+    expect(jellyfin?.accountId).toBe("abc");
+
+    const emby = parseEmbyPayload({
+      Event: "playback.stop",
+      PlayedToCompletion: true,
+      User: { Name: "luis", Id: "def" },
+      Item: { Type: "Movie", Name: "Interstellar", ProviderIds: { Tmdb: "157336" } },
+    });
+    expect(emby?.accountId).toBe("def");
+  });
+
+  test("isAccountAllowed prefers IDs and survives renames", () => {
+    const allowed = [{ id: "1", name: "Christian" }];
+    expect(isAccountAllowed({ accountId: "1", username: "Renamed" }, allowed)).toBe(true);
+    expect(isAccountAllowed({ accountId: "2", username: "Christian" }, allowed)).toBe(false);
+    // Payloads without an ID fall back to the name.
+    expect(isAccountAllowed({ username: "christian" }, allowed)).toBe(true);
+    // No accounts: the legacy name filter applies, or everyone.
+    expect(isAccountAllowed({ username: "ana" }, null, "christian")).toBe(false);
+    expect(isAccountAllowed({ username: "ana" }, null)).toBe(true);
+  });
+
+  test("converts a matching legacy name filter to the account ID", async () => {
+    insertUser("user-1");
+    const integration = insertIntegration("user-1", "plex", "plex-token-2");
+    const event: WebhookEvent = {
+      provider: "plex",
+      mediaType: "movie",
+      title: "Unknown",
+      username: "Christian",
+      accountId: "1",
+    };
+
+    await processWebhook(integration.id, "user-1", "plex", event, {
+      serverUsername: "christian",
+    });
+
+    const row = testDb.select().from(integrations).all()[0];
+    expect(row?.allowedAccounts).toEqual([{ id: "1", name: "Christian" }]);
+    expect(row?.serverUsername).toBeNull();
   });
 });

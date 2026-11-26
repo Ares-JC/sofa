@@ -97,6 +97,7 @@ export const integrationsCreate = os.account.integrations.create
       input.provider,
       input.enabled,
       input.serverUsername,
+      input.allowedAccounts,
     );
   });
 

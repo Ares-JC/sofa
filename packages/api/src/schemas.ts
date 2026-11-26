@@ -223,7 +223,20 @@ export const CreateIntegrationInput = z
       .nullable()
       .optional()
       .describe(
-        "Only log watches played by this media server user (Plex/Jellyfin/Emby). Empty or null logs watches from every user. Ignored for list integrations (Sonarr/Radarr).",
+        "Legacy: only log watches played by this media server user name. Prefer allowedAccounts. Ignored for list integrations (Sonarr/Radarr).",
+      ),
+    allowedAccounts: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(200).describe("Media server account ID"),
+          name: z.string().max(200).describe("Account display name"),
+        }),
+      )
+      .max(50)
+      .nullable()
+      .optional()
+      .describe(
+        "Only log watches played by these media server accounts (Plex/Jellyfin/Emby). Empty or null logs watches from every account. Replaces serverUsername. Ignored for list integrations.",
       ),
   })
   .meta({ description: "Create a new media server integration" });
@@ -1015,7 +1028,11 @@ export const IntegrationSchema = z
     serverUsername: z
       .string()
       .nullable()
-      .describe("Media server user whose watches are logged (null = every user)"),
+      .describe("Legacy media server user name filter (null = none)"),
+    allowedAccounts: z
+      .array(z.object({ id: z.string(), name: z.string() }))
+      .nullable()
+      .describe("Media server accounts whose watches are logged (null = every account)"),
     lastEventAt: z.string().nullable().describe("Last received event timestamp (ISO 8601)"),
     createdAt: z.string().describe("When the integration was created (ISO 8601)"),
   })
@@ -1028,6 +1045,8 @@ export const IntegrationEventSchema = z
     mediaType: z.string().nullable().describe("Media type from the event"),
     mediaTitle: z.string().nullable().describe("Title from the event"),
     status: z.enum(["success", "ignored", "error"]).describe("Event processing outcome"),
+    errorMessage: z.string().nullable().describe("Why the event was ignored or failed"),
+    accountName: z.string().nullable().describe("Media server account that played the item"),
     receivedAt: z.string().describe("When the event was received (ISO 8601)"),
   })
   .meta({ id: "IntegrationEvent", description: "A webhook or sync event from a media server" });
@@ -1039,6 +1058,15 @@ export const IntegrationsListOutput = z
         recentEvents: z
           .array(IntegrationEventSchema)
           .describe("Last 10 events for this integration"),
+        seenAccounts: z
+          .array(
+            z.object({
+              id: z.string(),
+              name: z.string(),
+              lastSeenAt: z.string().nullable(),
+            }),
+          )
+          .describe("Media server accounts seen in recent events, most recent first"),
       }),
     ),
   })

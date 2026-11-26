@@ -1,3 +1,4 @@
+import { updateIntegrationSettings } from "@sofa/db/queries/integrations";
 import { findEpisodeBySeasonAndNumber, findSeasonByTitleAndNumber } from "@sofa/db/queries/title";
 import {
   getLibraryShows,
@@ -34,8 +35,15 @@ export interface WebhookEvent {
   seasonNumber?: number;
   episodeNumber?: number;
   showTitle?: string;
-  /** Media server user who played the item, when the payload includes one. */
+  /** Display name of the media server account that played the item, when the payload has one. */
   username?: string;
+  /** Stable media server account ID (Plex `Account.id`, Jellyfin `UserId`, Emby `User.Id`). */
+  accountId?: string;
+}
+
+export interface AllowedAccount {
+  id: string;
+  name: string;
 }
 
 /** @internal */
@@ -57,6 +65,31 @@ export function matchesServerUsername(
   if (!wanted) return true;
   if (!actual) return false;
   return wanted.localeCompare(actual, undefined, { sensitivity: "accent" }) === 0;
+}
+
+/** Account IDs arrive as numbers (Plex) or strings (Jellyfin, Emby). */
+function toOptionalId(value: unknown): string | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return toOptionalString(value);
+}
+
+/**
+ * Whether an event passes an integration's account filter.
+ *
+ * - `allowedAccounts` (non-empty): the event's account ID must be in the list. Payloads without an
+ *   ID fall back to comparing the display name.
+ * - Otherwise the legacy `serverUsername` name filter applies (none = accept everyone).
+ */
+export function isAccountAllowed(
+  event: Pick<WebhookEvent, "accountId" | "username">,
+  allowedAccounts: AllowedAccount[] | null | undefined,
+  serverUsername?: string | null,
+): boolean {
+  if (allowedAccounts && allowedAccounts.length > 0) {
+    if (event.accountId) return allowedAccounts.some((a) => a.id === event.accountId);
+    return allowedAccounts.some((a) => matchesServerUsername(a.name, event.username));
+  }
+  return matchesServerUsername(serverUsername, event.username);
 }
 
 /** @internal */
@@ -126,6 +159,7 @@ export function parsePlexPayload(formData: FormData): WebhookEvent | null {
     showTitle: (metadata.grandparentTitle ?? metadata.parentTitle) as string | undefined,
     // Plex sends one webhook per account for every user on the server; `Account` says who played it.
     username: toOptionalString((payload.Account as Record<string, unknown> | undefined)?.title),
+    accountId: toOptionalId((payload.Account as Record<string, unknown> | undefined)?.id),
   };
 }
 
@@ -154,6 +188,7 @@ export function parseJellyfinPayload(body: Record<string, unknown>): WebhookEven
     episodeNumber: toOptionalInt(body.EpisodeNumber),
     showTitle: (body.SeriesName ?? body.ShowName) as string | undefined,
     username: toOptionalString(body.NotificationUsername) ?? toOptionalString(body.Username),
+    accountId: toOptionalId(body.UserId),
   };
 }
 
@@ -193,6 +228,9 @@ export function parseEmbyPayload(body: Record<string, unknown>): WebhookEvent | 
     episodeNumber: toOptionalInt(item.IndexNumber),
     showTitle: (item.SeriesName ?? item.ShowName) as string | undefined,
     username: toOptionalString((body.User as Record<string, unknown> | undefined)?.Name),
+    accountId:
+      toOptionalId((body.User as Record<string, unknown> | undefined)?.Id) ??
+      toOptionalId(body.UserId),
   };
 }
 
@@ -291,6 +329,8 @@ function logEvent(
       mediaTitle: event?.title || null,
       status,
       errorMessage: errorMessage ?? null,
+      accountId: event?.accountId ?? null,
+      accountName: event?.username ?? null,
       receivedAt: new Date(),
     },
     connectionId,
@@ -304,16 +344,40 @@ export async function processWebhook(
   userId: string,
   provider: "plex" | "jellyfin" | "emby",
   event: WebhookEvent,
-  options: { serverUsername?: string | null } = {},
+  options: {
+    allowedAccounts?: AllowedAccount[] | null;
+    serverUsername?: string | null;
+  } = {},
 ): Promise<{ status: "success" | "ignored" | "error"; message: string }> {
-  if (!matchesServerUsername(options.serverUsername, event.username)) {
-    const message = event.username
-      ? `Played by another ${provider} user`
-      : `No ${provider} user in the event to match`;
-    // Don't record what someone else watched, in the server log or this user's event log.
+  if (!isAccountAllowed(event, options.allowedAccounts, options.serverUsername)) {
+    const message =
+      event.username || event.accountId
+        ? `Played by another ${provider} user`
+        : `No ${provider} user in the event to match`;
+    // Don't record what someone else watched, in the server log or this user's event log. The
+    // account is kept so it can be picked in Settings.
     log.info(`Ignored ${provider} webhook: ${message}`);
     logEvent(connectionId, { ...event, title: "" }, "ignored", message);
     return { status: "ignored", message };
+  }
+
+  // A legacy name filter that just matched an account with a stable ID becomes an ID filter, so
+  // renaming the account later doesn't silently stop it.
+  if (
+    !options.allowedAccounts?.length &&
+    options.serverUsername &&
+    event.accountId &&
+    event.username
+  ) {
+    try {
+      updateIntegrationSettings(connectionId, {
+        allowedAccounts: [{ id: event.accountId, name: event.username }],
+        serverUsername: null,
+      });
+      log.info(`Converted ${provider} user filter "${event.username}" to its account ID`);
+    } catch (err) {
+      log.warn(`Couldn't convert ${provider} user filter: ${String(err)}`);
+    }
   }
 
   log.info(`Received ${provider} webhook: ${event.mediaType} "${event.title}"`);

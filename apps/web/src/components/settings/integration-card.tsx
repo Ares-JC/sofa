@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
@@ -28,6 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { orpc } from "@/lib/orpc/client";
 
+import { AccountFilter, RecentActivity } from "./integration-activity";
+
 // ─── Types ──────────────────────────────────────────────────────────
 
 export interface IntegrationConnection {
@@ -37,6 +38,7 @@ export interface IntegrationConnection {
   token: string;
   enabled: boolean;
   serverUsername: string | null;
+  allowedAccounts: { id: string; name: string }[] | null;
   lastEventAt: string | null;
   recentEvents: {
     id: string;
@@ -44,8 +46,11 @@ export interface IntegrationConnection {
     mediaType: string | null;
     mediaTitle: string | null;
     status: "success" | "ignored" | "error";
+    errorMessage: string | null;
+    accountName: string | null;
     receivedAt: string;
   }[];
+  seenAccounts: { id: string; name: string; lastSeenAt: string | null }[];
 }
 
 export interface IntegrationConfig {
@@ -80,16 +85,11 @@ export function IntegrationCard({
   const { t } = useLingui();
   const { provider, label } = config;
   const providerInput = provider as "plex" | "jellyfin" | "emby" | "sonarr" | "radarr";
-  const savedUsername = connection?.serverUsername ?? "";
-  // null = not editing: the field follows the saved value (after a save, reconnect, or refetch).
-  const [usernameDraft, setUsernameDraft] = useState<string | null>(null);
-  const usernameValue = usernameDraft ?? savedUsername;
-  const usernameChanged = usernameValue.trim() !== savedUsername;
 
   const connectMutation = useMutation(
     orpc.account.integrations.create.mutationOptions({
       onSuccess: (result) => {
-        setConnections((prev) => [...prev, { ...result, recentEvents: [] }]);
+        setConnections((prev) => [...prev, { ...result, recentEvents: [], seenAccounts: [] }]);
         toast.success(t`${label} connected`);
       },
       onError: () => toast.error(t`Failed to connect ${label}`),
@@ -126,29 +126,40 @@ export function IntegrationCard({
     }),
   );
 
-  const usernameMutation = useMutation(
+  const accountsMutation = useMutation(
     orpc.account.integrations.create.mutationOptions({
+      onMutate: ({ allowedAccounts }) => {
+        let previous: IntegrationConnection[] = [];
+        setConnections((prev) => {
+          previous = prev;
+          return prev.map((c) =>
+            c.provider === provider
+              ? { ...c, allowedAccounts: allowedAccounts ?? null, serverUsername: null }
+              : c,
+          );
+        });
+        return { previous };
+      },
       onSuccess: (result) => {
         setConnections((prev) =>
           prev.map((c) =>
-            c.provider === provider ? { ...c, serverUsername: result.serverUsername } : c,
+            c.provider === provider
+              ? {
+                  ...c,
+                  allowedAccounts: result.allowedAccounts,
+                  serverUsername: result.serverUsername,
+                }
+              : c,
           ),
         );
-        // Stop editing only if nothing new was typed while the save was in flight.
-        setUsernameDraft(
-          (draft) => (draft !== null && draft.trim() === (result.serverUsername ?? "") ? null : draft),
-        );
-        toast.success(t`${label} user saved`);
+        toast.success(t`${label} accounts saved`);
       },
-      onError: () => toast.error(t`Failed to save ${label} user`),
+      onError: (_, __, ctx) => {
+        if (ctx?.previous) setConnections(ctx.previous);
+        toast.error(t`Failed to save ${label} accounts`);
+      },
     }),
   );
-
-  function handleUsernameSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!usernameChanged || usernameMutation.isPending) return;
-    usernameMutation.mutate({ provider: providerInput, serverUsername: usernameValue.trim() });
-  }
 
   const [copied, setCopied] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
@@ -242,39 +253,14 @@ export function IntegrationCard({
                     </div>
 
                     {connection.type === "webhook" && (
-                      <form onSubmit={handleUsernameSubmit}>
-                        <Label
-                          htmlFor={`${config.provider}-username`}
-                          className="text-muted-foreground mb-1"
-                        >
-                          <Trans>{label} user</Trans>
-                        </Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id={`${config.provider}-username`}
-                            value={usernameValue}
-                            maxLength={100}
-                            autoComplete="off"
-                            spellCheck={false}
-                            placeholder={t`Everyone on the server`}
-                            onChange={(e) => setUsernameDraft(e.target.value)}
-                          />
-                          <Button
-                            type="submit"
-                            variant="outline"
-                            size="sm"
-                            disabled={!usernameChanged || usernameMutation.isPending}
-                          >
-                            <Trans>Save</Trans>
-                          </Button>
-                        </div>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                          <Trans>
-                            Only log what this {label} user watches. Leave it empty to log watches
-                            from everyone on the server.
-                          </Trans>
-                        </p>
-                      </form>
+                      <AccountFilter
+                        label={label}
+                        connection={connection}
+                        saving={accountsMutation.isPending}
+                        onChange={(allowedAccounts) =>
+                          accountsMutation.mutate({ provider: providerInput, allowedAccounts })
+                        }
+                      />
                     )}
 
                     <div className="flex items-center gap-2">
@@ -299,6 +285,8 @@ export function IntegrationCard({
                         <Trans>Disconnect</Trans>
                       </Button>
                     </div>
+
+                    {connection.type === "webhook" && <RecentActivity connection={connection} />}
                   </motion.div>
                 )}
               </AnimatePresence>

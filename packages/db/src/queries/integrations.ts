@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNotNull, max } from "drizzle-orm";
 
 import { db } from "../client";
 import { integrationEvents, integrations } from "../schema";
@@ -29,6 +29,28 @@ export function getRecentEventsForIntegrations(integrationIds: string[], limit =
   return result;
 }
 
+/** Media server accounts seen in an integration's events, most recently active first. */
+export function getSeenAccountsForIntegration(integrationId: string, limit = 25) {
+  const lastSeen = max(integrationEvents.receivedAt);
+  return db
+    .select({
+      id: integrationEvents.accountId,
+      name: max(integrationEvents.accountName),
+      lastSeenAt: lastSeen,
+    })
+    .from(integrationEvents)
+    .where(
+      and(
+        eq(integrationEvents.integrationId, integrationId),
+        isNotNull(integrationEvents.accountId),
+      ),
+    )
+    .groupBy(integrationEvents.accountId)
+    .orderBy(desc(lastSeen))
+    .limit(limit)
+    .all();
+}
+
 export function getIntegrationByUserAndProvider(userId: string, provider: string) {
   return db
     .select()
@@ -39,7 +61,10 @@ export function getIntegrationByUserAndProvider(userId: string, provider: string
 
 export function updateIntegrationSettings(
   integrationId: string,
-  values: Pick<Partial<typeof integrations.$inferInsert>, "enabled" | "serverUsername">,
+  values: Pick<
+    Partial<typeof integrations.$inferInsert>,
+    "enabled" | "serverUsername" | "allowedAccounts"
+  >,
 ) {
   return db
     .update(integrations)

@@ -440,8 +440,15 @@ export const integrations = sqliteTable(
     enabled: int("enabled", { mode: "boolean" }).notNull().default(true),
     createdAt: int("createdAt", { mode: "timestamp" }).notNull(),
     lastEventAt: int("lastEventAt", { mode: "timestamp" }),
-    /** Only log webhook events played by this media server user (null = accept everyone). */
+    /**
+     * Legacy: only log webhook events played by this media server user name. Superseded by
+     * `allowedAccounts`, and converted to it automatically the first time it matches an event.
+     */
     serverUsername: text("serverUsername"),
+    /** Only log webhook events played by these media server accounts (null = accept everyone). */
+    allowedAccounts: text("allowedAccounts", { mode: "json" }).$type<
+      { id: string; name: string }[]
+    >(),
   },
   (table) => [
     uniqueIndex("integrations_userId_provider").on(table.userId, table.provider),
@@ -463,6 +470,9 @@ export const integrationEvents = sqliteTable(
       enum: ["success", "ignored", "error"],
     }).notNull(),
     errorMessage: text("errorMessage"),
+    /** Media server account that played the item (kept for ignored events too). */
+    accountId: text("accountId"),
+    accountName: text("accountName"),
     receivedAt: int("receivedAt", { mode: "timestamp" }).notNull(),
   },
   (table) => [

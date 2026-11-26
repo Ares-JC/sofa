@@ -153,3 +153,54 @@ describe("regenerateToken", () => {
     expect(result?.token).toHaveLength(64);
   });
 });
+
+describe("account filter", () => {
+  test("saves picked accounts and clears the legacy user name", () => {
+    createOrUpdateIntegration("user-1", "plex", undefined, "christian");
+    const result = createOrUpdateIntegration("user-1", "plex", undefined, undefined, [
+      { id: "1", name: "Christian" },
+      { id: "1", name: "Duplicate" },
+      { id: " ", name: "Blank" },
+      { id: "2", name: "" },
+    ]);
+    expect(result.allowedAccounts).toEqual([
+      { id: "1", name: "Christian" },
+      { id: "2", name: "2" },
+    ]);
+    expect(result.serverUsername).toBeNull();
+  });
+
+  test("an empty account list means everyone", () => {
+    createOrUpdateIntegration("user-1", "plex", undefined, undefined, [{ id: "1", name: "A" }]);
+    const result = createOrUpdateIntegration("user-1", "plex", undefined, undefined, []);
+    expect(result.allowedAccounts).toBeNull();
+  });
+
+  test("ignores accounts for list integrations", () => {
+    const result = createOrUpdateIntegration("user-1", "sonarr", undefined, undefined, [
+      { id: "1", name: "A" },
+    ]);
+    expect(result.allowedAccounts).toBeNull();
+  });
+
+  test("lists accounts seen in events and includes event details", async () => {
+    const created = createOrUpdateIntegration("user-1", "plex");
+    const { processWebhook } = await import("../src/webhooks");
+    await processWebhook(
+      created.id,
+      "user-1",
+      "plex",
+      { provider: "plex", mediaType: "movie", title: "X", username: "ana", accountId: "7" },
+      { allowedAccounts: [{ id: "1", name: "Christian" }] },
+    );
+
+    const listed = listUserIntegrations("user-1").integrations[0];
+    expect(listed.seenAccounts.map((a) => [a.id, a.name])).toEqual([["7", "ana"]]);
+    expect(listed.recentEvents[0]).toMatchObject({
+      status: "ignored",
+      mediaTitle: null,
+      accountName: "ana",
+      errorMessage: "Played by another plex user",
+    });
+  });
+});

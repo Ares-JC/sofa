@@ -51,6 +51,7 @@ app.post("/:token", async (c) => {
     }
 
     await processWebhook(connection.id, connection.userId, provider, event, {
+      allowedAccounts: connection.allowedAccounts,
       serverUsername: connection.serverUsername,
     });
   } catch (err) {

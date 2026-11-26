@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/lib/orpc/client";
@@ -8,8 +8,16 @@ import { IntegrationCard, type IntegrationConnection } from "./integration-card"
 import { INTEGRATION_CONFIGS } from "./integration-configs";
 
 export function IntegrationsSection() {
-  const { data, isPending } = useQuery(orpc.account.integrations.list.queryOptions());
+  // Refresh now and then so the recent activity list stays current while the page is open.
+  const { data, isPending } = useQuery(
+    orpc.account.integrations.list.queryOptions({ refetchInterval: 30_000 }),
+  );
   const [localConnections, setLocalConnections] = useState<IntegrationConnection[] | null>(null);
+
+  // Fresh server data replaces local edits (they've been saved by then).
+  useEffect(() => {
+    setLocalConnections(null);
+  }, [data]);
 
   // Use local state if user has modified connections, else use query data
   const connections = localConnections ?? data?.integrations ?? [];
