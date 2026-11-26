@@ -22,6 +22,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { orpc } from "@/lib/orpc/client";
 import { invalidateTrackingQueries } from "@/lib/orpc/invalidate";
+import { formatShortDate } from "@sofa/i18n/format";
 
 import { useTitleContext } from "./title-context";
 
@@ -62,13 +63,16 @@ export function CollectionButton() {
   const isReleased = (date: string | null) => date != null && date <= today;
 
   const isWatched = (id: string) => overrides[id] ?? userStatuses[id] === "completed";
-  // Count only released movies: an announced sequel shouldn't keep the series "incomplete".
+  // A sequel with an official release date counts toward the total (2/3), but one with no date
+  // yet isn't counted at all (2/2). Either way, unreleased movies can't keep the series from
+  // being complete, since they can't be watched yet.
   const released = movies.filter((item) => isReleased(item.releaseDate));
+  const scheduled = movies.filter((item) => item.releaseDate && !isReleased(item.releaseDate));
   const watchedCount = released.filter((item) => isWatched(item.id)).length;
-  const total = released.length;
+  const total = released.length + scheduled.length;
   const upcomingCount = movies.length - released.length;
   /** Every released movie of the series watched: shown as an achievement in gold. */
-  const complete = total > 0 && watchedCount === total;
+  const complete = released.length > 0 && watchedCount === released.length;
 
   async function toggle(ids: string[], watched: boolean) {
     setPending((prev) => new Set([...prev, ...ids]));
@@ -153,7 +157,7 @@ export function CollectionButton() {
                 </DialogDescription>
               </div>
               <Progress
-                value={total > 0 ? (watchedCount / total) * 100 : 0}
+                value={released.length > 0 ? (watchedCount / released.length) * 100 : 0}
                 className={complete ? "[&_[data-slot=progress-indicator]]:bg-amber-400" : undefined}
               />
             </div>
@@ -196,7 +200,11 @@ export function CollectionButton() {
                         {item.title}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {isReleased(item.releaseDate) ? year : t`Coming soon`}
+                        {isReleased(item.releaseDate)
+                          ? year
+                          : item.releaseDate
+                            ? t`Release: ${formatShortDate(item.releaseDate)}`
+                            : t`Coming soon`}
                         {current ? ` · ${t`This movie`}` : ""}
                       </p>
                     </div>

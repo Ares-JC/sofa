@@ -4219,3 +4219,7 @@ msgstr "¡Colección completa!"
 #: apps/web/src/components/titles/title-collection.tsx
 msgid "{upcomingCount} coming soon"
 msgstr "{upcomingCount} por estrenar"
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "Release: {0}"
+msgstr "Estreno: {0}"
