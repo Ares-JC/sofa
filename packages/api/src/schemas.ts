@@ -659,6 +659,25 @@ export const TitleRecommendationsOutput = z
     description: "Recommended titles with the user's statuses",
   });
 
+export const TitleCollectionOutput = z
+  .object({
+    collection: z
+      .object({
+        id: z.number().describe("TMDB collection ID"),
+        name: z.string().describe("Collection name"),
+        overview: z.string().nullable().describe("Collection overview"),
+        posterPath: z.string().nullable().describe("Collection poster image path"),
+        backdropPath: z.string().nullable().describe("Collection backdrop image path"),
+      })
+      .nullable()
+      .describe("The collection the movie belongs to, or null"),
+    items: z.array(TmdbBrowseItem).describe("Movies in the collection, by release date"),
+    userStatuses: userStatusMap,
+  })
+  .meta({
+    description: "The collection (film series) a movie belongs to, with its movies",
+  });
+
 // ─── People outputs ────────────────────────────────────────────
 
 export const PersonDetailOutput = z

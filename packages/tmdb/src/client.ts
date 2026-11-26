@@ -348,6 +348,32 @@ export async function getEpisodeGroupDetails(groupId: string) {
   return data as unknown as TmdbEpisodeGroupDetails;
 }
 
+export type TmdbCollectionDetails = {
+  id: number;
+  name: string;
+  overview?: string | null;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  parts?: {
+    id: number;
+    title?: string;
+    overview?: string;
+    poster_path?: string | null;
+    backdrop_path?: string | null;
+    release_date?: string;
+    vote_average?: number;
+  }[];
+};
+
+/** A movie collection (e.g. a film series) with all of its movies. */
+export async function getCollectionDetails(collectionId: number) {
+  const { data, error } = await client.GET("/3/collection/{collection_id}", {
+    params: { path: { collection_id: collectionId } },
+  });
+  if (error) throw new Error(`TMDB API error: collection/${collectionId}`);
+  return data as unknown as TmdbCollectionDetails;
+}
+
 export async function getTvExternalIds(tmdbId: number) {
   const { data, error } = await client.GET("/3/tv/{series_id}/external_ids", {
     params: { path: { series_id: tmdbId } },

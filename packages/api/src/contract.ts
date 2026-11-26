@@ -48,6 +48,7 @@ import {
   SetEpisodeOrderInput,
   SystemHealthOutput,
   SystemStatusOutput,
+  TitleCollectionOutput,
   TitleDetailOutput,
   TitleRecommendationsOutput,
   TrendingOutput,
@@ -117,6 +118,20 @@ export const contract = {
       )
       .input(IdParam)
       .output(TitleRecommendationsOutput),
+    collection: oc
+      .meta(
+        openapi({
+          method: "GET",
+          path: "/titles/{id}/collection",
+          tags: ["Titles"],
+          summary: "Get a movie's collection",
+          description:
+            "Fetch the collection (film series) a movie belongs to, with every movie in it and the user's statuses.",
+          successDescription: "The collection, or null when the movie is not part of one",
+        }),
+      )
+      .input(IdParam)
+      .output(TitleCollectionOutput),
     episodeOrders: oc
       .meta(
         openapi({

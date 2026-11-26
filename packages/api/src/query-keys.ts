@@ -4,7 +4,7 @@ type TrackingKeyedClient = {
   library: Keyed;
   discover: Keyed;
   people: Keyed;
-  titles: { similar: Keyed };
+  titles: { similar: Keyed; collection: Keyed };
 };
 
 /**
@@ -17,9 +17,14 @@ export function trackingStateQueryKeys(orpc: TrackingKeyedClient): (readonly unk
 
 /**
  * Queries whose results are derived from tracking state (recommendations, discover statuses,
- * similar titles, people credits). Refetch them after a change, but they can be slow (TMDB-backed).
+ * similar titles, collections, people credits). Refetch them after a change, but they can be slow (TMDB-backed).
  * `titles.get` is deliberately absent — title details don't depend on tracking.
  */
 export function trackingDerivedQueryKeys(orpc: TrackingKeyedClient): (readonly unknown[])[] {
-  return [orpc.discover.key(), orpc.people.key(), orpc.titles.similar.key()];
+  return [
+    orpc.discover.key(),
+    orpc.people.key(),
+    orpc.titles.similar.key(),
+    orpc.titles.collection.key(),
+  ];
 }

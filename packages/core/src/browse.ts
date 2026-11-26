@@ -4,11 +4,15 @@ import type { z } from "zod";
 import { AppErrorCode } from "@sofa/api/errors";
 import type { DiscoverInput } from "@sofa/api/schemas";
 import { WATCH_REGION } from "@sofa/config";
+import { getTitleById } from "@sofa/db/queries/title";
 import {
   discover,
   findByExternalId,
+  getCollectionDetails,
   getGenres,
+  getMovieDetails,
   getPopular,
+  getTmdbLanguage,
   getTrending,
   searchMovies,
   searchMulti,
@@ -433,5 +437,74 @@ export async function getTmdbGenres(type: MediaType) {
       id: g.id,
       name: g.name ?? "",
     })),
+  };
+}
+
+// ─── Collections ──────────────────────────────────────────────
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** movie TMDB id → its collection id (null: not part of one). Changes rarely. */
+const movieCollectionCache = new Map<number, { collectionId: number | null; at: number }>();
+const collectionCache = new Map<
+  string,
+  { data: Awaited<ReturnType<typeof getCollectionDetails>>; at: number }
+>();
+
+async function collectionIdForMovie(tmdbId: number): Promise<number | null> {
+  const cached = movieCollectionCache.get(tmdbId);
+  if (cached && Date.now() - cached.at < 7 * DAY_MS) return cached.collectionId;
+  const movie = await getMovieDetails(tmdbId);
+  const raw = (movie as { belongs_to_collection?: { id?: number } | null }).belongs_to_collection;
+  const collectionId = typeof raw?.id === "number" ? raw.id : null;
+  movieCollectionCache.set(tmdbId, { collectionId, at: Date.now() });
+  return collectionId;
+}
+
+async function collectionDetails(collectionId: number) {
+  const key = `${collectionId}:${getTmdbLanguage()}`;
+  const cached = collectionCache.get(key);
+  if (cached && Date.now() - cached.at < DAY_MS) return cached.data;
+  const data = await getCollectionDetails(collectionId);
+  collectionCache.set(key, { data, at: Date.now() });
+  return data;
+}
+
+/** Sort a collection's movies by release date; unreleased/undated ones go last. */
+export function sortCollectionParts<T extends { releaseDate: string | null }>(parts: T[]): T[] {
+  return [...parts].sort((a, b) => {
+    if (!a.releaseDate) return b.releaseDate ? 1 : 0;
+    if (!b.releaseDate) return -1;
+    return a.releaseDate.localeCompare(b.releaseDate);
+  });
+}
+
+/** The collection (film series) a movie belongs to, with every movie in it and the user's statuses. */
+export async function getTitleCollection(titleId: string, userId: string) {
+  const empty = { collection: null, items: [], userStatuses: {} };
+  const title = getTitleById(titleId);
+  if (!title || title.type !== "movie" || !isTmdbConfigured()) return empty;
+
+  const collectionId = await collectionIdForMovie(title.tmdbId);
+  if (collectionId == null) return empty;
+  const details = await collectionDetails(collectionId);
+
+  const parts = sortCollectionParts(
+    (details.parts ?? []).map((part) => ({
+      ...toBrowseItem(part, "movie"),
+      releaseDate: part.release_date || null,
+    })),
+  );
+  const { items } = withTitleIds(parts);
+  const ids = items.map((item) => item.id).filter(Boolean);
+  return {
+    collection: {
+      id: details.id,
+      name: details.name,
+      overview: details.overview || null,
+      posterPath: tmdbImageUrl(details.poster_path ?? null, "posters"),
+      backdropPath: tmdbImageUrl(details.backdrop_path ?? null, "backdrops"),
+    },
+    items,
+    userStatuses: userStateFor(userId, ids).userStatuses,
   };
 }

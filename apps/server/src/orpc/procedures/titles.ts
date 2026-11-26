@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 
 import { AppErrorCode } from "@sofa/api/errors";
+import { getTitleCollection } from "@sofa/core/browse";
 import { getRecommendationsForTitle } from "@sofa/core/discovery";
 import { getOrFetchTitle, listEpisodeGroups, setEpisodeGroup } from "@sofa/core/metadata";
 import { getDisplayStatusesByTitleIds } from "@sofa/core/tracking";
@@ -26,6 +27,10 @@ export const similar = os.titles.similar.use(authed).handler(({ input, context }
   );
   return { recommendations: recs, userStatuses };
 });
+
+export const collection = os.titles.collection
+  .use(authed)
+  .handler(({ input, context }) => getTitleCollection(input.id, context.user.id));
 
 export const episodeOrders = os.titles.episodeOrders
   .use(authed)

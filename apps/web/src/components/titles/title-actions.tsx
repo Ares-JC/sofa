@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { LogWatchDialog } from "./log-watch-dialog";
 import { StarRating } from "./star-rating";
 import { StatusButton } from "./status-button";
+import { CollectionButton } from "./title-collection";
 import { useTitleContext, useTitleUserInfo } from "./title-context";
 import { useTitleActions } from "./use-title-actions";
 
@@ -41,6 +42,8 @@ export function TitleActions() {
         </Button>
       )}
       {titleType === "movie" && <LogWatchDialog kind="movie" id={titleId} />}
+      {/* Keyed so its window closes when moving to another movie of the series */}
+      {titleType === "movie" && <CollectionButton key={titleId} />}
       <Separator orientation="vertical" className="bg-border/50 mx-0.5 my-auto h-6" />
       <StarRating value={userRating ?? 0} onChange={handleRating} />
     </div>

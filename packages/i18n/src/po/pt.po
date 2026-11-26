@@ -4183,3 +4183,27 @@ msgstr ""
 #: apps/web/src/components/settings/metadata-language-section.tsx
 msgid "Language for titles, synopses and episode names. When a translation is missing, the closest one is used, then English. Applies to every user."
 msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "Collection"
+msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "{watchedCount} of {total} movies watched"
+msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "Coming soon"
+msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "This movie"
+msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "Watched"
+msgstr ""
+
+#: apps/web/src/components/titles/title-collection.tsx
+msgid "Mark all watched"
+msgstr ""

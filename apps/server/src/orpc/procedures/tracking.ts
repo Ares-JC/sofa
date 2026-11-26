@@ -23,6 +23,7 @@ import {
   unwatchSeries,
   watchSeason,
 } from "@sofa/core/tracking";
+import { getTitleById } from "@sofa/db/queries/title";
 import { createLogger } from "@sofa/logger";
 import { tmdbImageUrl } from "@sofa/tmdb/image";
 
@@ -35,12 +36,27 @@ const watchHistoryTypeMap = { movie: "movies", episode: "episodes" } as const;
 
 // ─── Watch handlers by scope ──────────────────────────────────
 
+/**
+ * Movies can be marked watched straight from lists (e.g. a collection) before their page was
+ * ever opened; download their full details in the background like a quick add does.
+ */
+function fetchIfShell(titleId: string) {
+  const title = getTitleById(titleId);
+  if (!title || title.lastFetchedAt) return;
+  getOrFetchTitleByTmdbId(title.tmdbId, title.type).catch((err) => {
+    log.warn(`Failed to import ${title.type} TMDB ${title.tmdbId}:`, err);
+  });
+}
+
 // All tracking core functions are synchronous (bun:sqlite). If any become
 // async, these loops need to be awaited to surface errors properly.
 function handleWatch(userId: string, scope: WatchScopeType, ids: string[]) {
   switch (scope) {
     case "movie":
-      for (const id of ids) logMovieWatch(userId, id);
+      for (const id of ids) {
+        logMovieWatch(userId, id);
+        fetchIfShell(id);
+      }
       break;
     case "episode":
       if (ids.length === 1) {

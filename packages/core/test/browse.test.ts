@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { buildDiscoverParams, clampTotalPages, tmdbSortBy, toBrowseItem } from "../src/browse";
+import {
+  buildDiscoverParams,
+  clampTotalPages,
+  sortCollectionParts,
+  tmdbSortBy,
+  toBrowseItem,
+} from "../src/browse";
 
 describe("clampTotalPages", () => {
   test("defaults to 1 when undefined", () => {
@@ -150,5 +156,17 @@ describe("buildDiscoverParams", () => {
     const params = buildDiscoverParams({ type: "movie", page: 1 }, [], "GB");
     expect(params).not.toHaveProperty("with_watch_providers");
     expect(params).not.toHaveProperty("watch_region");
+  });
+});
+
+describe("sortCollectionParts", () => {
+  test("orders a collection by release date with undated movies last", () => {
+    const sorted = sortCollectionParts([
+      { title: "Third", releaseDate: "2021-12-17" },
+      { title: "Announced", releaseDate: null },
+      { title: "First", releaseDate: "2017-07-07" },
+      { title: "Second", releaseDate: "2019-07-02" },
+    ]);
+    expect(sorted.map((part) => part.title)).toEqual(["First", "Second", "Third", "Announced"]);
   });
 });
