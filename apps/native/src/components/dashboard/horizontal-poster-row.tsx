@@ -1,5 +1,5 @@
 import { FlashList } from "@shopify/flash-list";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
 
 import {
@@ -37,8 +37,15 @@ export function HorizontalPosterRow({
   isFetchingNextPage?: boolean;
 }) {
   const { updateStatus } = useTitleActions();
+  // Titles added from this row, shown as on the watchlist right away instead of after the
+  // (slow, TMDB-backed) list refetches.
+  const [addedIds, setAddedIds] = useState<ReadonlySet<string>>(() => new Set());
   const handleQuickAdd = useCallback(
-    (id: string) => updateStatus.mutate({ id, status: "watchlist" }),
+    (id: string) =>
+      updateStatus.mutate(
+        { id, status: "watchlist" },
+        { onSuccess: () => setAddedIds((prev) => new Set(prev).add(id)) },
+      ),
     [updateStatus],
   );
   const addingKey = updateStatus.isPending ? (updateStatus.variables?.id ?? null) : null;
@@ -53,13 +60,13 @@ export function HorizontalPosterRow({
         posterThumbHash={item.posterThumbHash}
         releaseDate={item.releaseDate ?? item.firstAirDate}
         voteAverage={item.voteAverage}
-        userStatus={item.userStatus}
+        userStatus={item.userStatus ?? (addedIds.has(item.id) ? "in_watchlist" : null)}
         episodeProgress={item.episodeProgress}
         onQuickAdd={handleQuickAdd}
         isAdding={addingKey === item.id}
       />
     ),
-    [addingKey, handleQuickAdd],
+    [addedIds, addingKey, handleQuickAdd],
   );
 
   const footer = useCallback(
@@ -94,6 +101,7 @@ export function HorizontalPosterRow({
       data={items}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
+      extraData={addedIds}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListFooterComponent={footer}
