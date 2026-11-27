@@ -1,4 +1,4 @@
-import { IconCheck, IconSearch } from "@tabler/icons-react";
+import { IconCheck, IconSearch, IconX } from "@tabler/icons-react";
 import { Command as CommandPrimitive } from "cmdk";
 import type * as React from "react";
 
@@ -58,9 +58,17 @@ function CommandDialog({
 function CommandInput({
   className,
   inputSize = "default",
+  onClear,
+  clearLabel = "Clear",
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input> & { inputSize?: "default" | "lg" }) {
+}: React.ComponentProps<typeof CommandPrimitive.Input> & {
+  inputSize?: "default" | "lg";
+  /** When set, a round "x" button appears while there is text, to clear it in one click. */
+  onClear?: () => void;
+  clearLabel?: string;
+}) {
   const large = inputSize === "lg";
+  const hasText = typeof props.value === "string" && props.value.length > 0;
   return (
     <div data-slot="command-input-wrapper" className={large ? "p-2 pb-1" : "p-1 pb-0"}>
       <InputGroup className={cn("bg-input/20 dark:bg-input/30", large ? "h-11!" : "h-8!")}>
@@ -76,6 +84,22 @@ function CommandInput({
         <InputGroupAddon>
           <IconSearch className={cn("shrink-0 opacity-50", large ? "size-4" : "size-3.5")} />
         </InputGroupAddon>
+        {onClear && hasText && (
+          <InputGroupAddon align="inline-end">
+            <button
+              type="button"
+              aria-label={clearLabel}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={onClear}
+              className={cn(
+                "bg-muted-foreground/20 text-muted-foreground hover:bg-muted-foreground/35 hover:text-foreground flex shrink-0 items-center justify-center rounded-full transition-colors",
+                large ? "size-6" : "size-5",
+              )}
+            >
+              <IconX className={large ? "size-3.5" : "size-3"} />
+            </button>
+          </InputGroupAddon>
+        )}
       </InputGroup>
     </div>
   );

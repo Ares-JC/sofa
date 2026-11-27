@@ -108,6 +108,11 @@ export function CommandPalette() {
   const results: SearchResult[] = searchData?.results?.slice(0, 8) ?? [];
   const enabled = !commandPaletteOpen;
 
+  // Start every search fresh, however the palette was opened (shortcut, nav button, …)
+  useEffect(() => {
+    if (commandPaletteOpen) setQuery("");
+  }, [commandPaletteOpen]);
+
   const handleOpenChange = useCallback(
     (open: boolean | ((prev: boolean) => boolean)) => {
       setCommandPaletteOpen((prev) => {
@@ -220,6 +225,8 @@ export function CommandPalette() {
               placeholder={t`Search movies & TV shows…`}
               value={query}
               onValueChange={setQuery}
+              onClear={() => setQuery("")}
+              clearLabel={t`Clear search`}
             />
             <CommandList className="max-h-[60vh] p-1">
               {hasQuery && loading && (

@@ -4223,3 +4223,7 @@ msgstr ""
 #: apps/web/src/components/titles/title-collection.tsx
 msgid "Release: {0}"
 msgstr ""
+
+#: apps/web/src/components/command-palette.tsx
+msgid "Clear search"
+msgstr ""
