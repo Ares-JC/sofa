@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { uniqueTitles, useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
+import { EXPLORE_STALE_MS, uniqueTitles, useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 const DECADE_PRESETS = [
@@ -90,6 +90,7 @@ export function DiscoverSection() {
         initialPageParam: 1,
         getNextPageParam: (lastPage) =>
           lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+        staleTime: EXPLORE_STALE_MS,
       }),
     );
 

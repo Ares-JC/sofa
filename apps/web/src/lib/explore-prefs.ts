@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from "react";
 
+/**
+ * Explore lists (TMDB trending/popular/discover) change slowly; keep them for a while so going
+ * back to Explore doesn't re-download every loaded page.
+ */
+export const EXPLORE_STALE_MS = 10 * 60_000;
+
 /** Per-browser preference: hide titles already in the library from Explore lists. */
 const STORAGE_KEY = "sofa:explore:hide-in-library";
 const listeners = new Set<() => void>();

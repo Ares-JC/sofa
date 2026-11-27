@@ -6,7 +6,7 @@ import { TitleCard, TitleCardSkeleton } from "@/components/title-card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { uniqueTitles, useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
+import { EXPLORE_STALE_MS, uniqueTitles, useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 interface Genre {
@@ -71,6 +71,7 @@ export function FilterableTitleRow({
       initialPageParam: 1,
       getNextPageParam: (lastPage) =>
         lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+      staleTime: EXPLORE_STALE_MS,
     }),
   );
 

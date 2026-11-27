@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
-import { invalidateTrackingQueries } from "@/lib/orpc/invalidate";
+import { invalidateTrackingQueries, patchExploreStatus } from "@/lib/orpc/invalidate";
 import type { Season } from "@sofa/api/schemas";
 
 import { useTitleContext } from "./title-context";
@@ -45,11 +45,13 @@ export function useTitleActions() {
 
   const setUserInfo = useCallback(
     (updater: (old: UserInfo) => UserInfo) => {
-      queryClient.setQueryData<UserInfo>(userInfoKey, (old) =>
+      const next = queryClient.setQueryData<UserInfo>(userInfoKey, (old) =>
         updater(old ?? { status: null, rating: null, episodeWatches: [] }),
       );
+      // Keep Explore lists in sync without refetching them (see invalidateTrackingQueries).
+      if (next) patchExploreStatus(queryClient, titleId, next.status);
     },
-    [queryClient, userInfoKey],
+    [queryClient, userInfoKey, titleId],
   );
 
   const invalidateAfterMutation = { onSettled: () => void invalidateTrackingQueries(queryClient) };

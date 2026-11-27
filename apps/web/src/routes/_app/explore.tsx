@@ -11,7 +11,7 @@ import { TitleRow } from "@/components/explore/title-row";
 import { RouteError } from "@/components/route-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { setHideInLibrary, uniqueTitles, useHideInLibrary } from "@/lib/explore-prefs";
+import { EXPLORE_STALE_MS, setHideInLibrary, uniqueTitles, useHideInLibrary } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 export const Route = createFileRoute("/_app/explore")({
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_app/explore")({
           initialPageParam: 1,
           getNextPageParam: (lastPage) =>
             lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+          staleTime: EXPLORE_STALE_MS,
         }),
       ),
       context.queryClient.ensureQueryData(
@@ -88,6 +89,7 @@ function ExplorePage() {
       initialPageParam: 1,
       getNextPageParam: (lastPage) =>
         lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+      staleTime: EXPLORE_STALE_MS,
     }),
   );
 

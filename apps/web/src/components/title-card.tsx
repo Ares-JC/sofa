@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTiltEffect } from "@/hooks/use-tilt-effect";
 import { orpc } from "@/lib/orpc/client";
-import { invalidateTrackingQueries } from "@/lib/orpc/invalidate";
+import { invalidateTrackingQueries, patchExploreStatus } from "@/lib/orpc/invalidate";
 import { thumbHashToUrl } from "@/lib/thumbhash";
 
 export function TitleCardSkeleton() {
@@ -96,7 +96,10 @@ function QuickAddButton({ id, userStatus }: { id: string; userStatus?: TitleStat
 
   const addToWatchlistMutation = useMutation(
     orpc.tracking.updateStatus.mutationOptions({
-      onSuccess: () => setOptimisticStatus("in_watchlist"),
+      onSuccess: () => {
+        setOptimisticStatus("in_watchlist");
+        patchExploreStatus(queryClient, id, "in_watchlist");
+      },
       onError: () => toast.error(t`Failed to update status`),
       onSettled: () => void invalidateTrackingQueries(queryClient),
     }),
@@ -162,6 +165,7 @@ function HoldToWatchButton({ id, onWatched }: { id: string; onWatched: () => voi
     orpc.tracking.watch.mutationOptions({
       onSuccess: () => {
         onWatched();
+        patchExploreStatus(queryClient, id, "completed");
         toast.success(t`Marked as watched`);
       },
       onError: () => toast.error(t`Failed to mark as watched`),
