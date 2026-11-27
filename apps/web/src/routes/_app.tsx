@@ -1,5 +1,4 @@
-import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 import { CommandPalette } from "@/components/command-palette";
 import { MobileTabBar, NavBar } from "@/components/nav-bar";
@@ -7,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateToast } from "@/components/update-toast";
 import { loadSession } from "@/lib/auth/client";
 import { client } from "@/lib/orpc/client";
-import { trackSheetOrigin } from "@/lib/sheet-origin";
 
 const UPDATE_CHECK_REUSE_MS = 10 * 60_000;
 let cachedUpdateCheck: {
@@ -43,16 +41,6 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const { session, updateCheck } = Route.useRouteContext();
-  const router = useRouter();
-
-  // Phones: remember the list a title sheet was opened from, so closing returns there
-  useEffect(
-    () =>
-      router.subscribe("onBeforeNavigate", (event) => {
-        trackSheetOrigin(event.fromLocation, event.toLocation);
-      }),
-    [router],
-  );
   return (
     <>
       <div className="relative z-0 min-h-screen overflow-x-clip pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">

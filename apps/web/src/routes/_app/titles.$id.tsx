@@ -1,19 +1,13 @@
 import { Trans } from "@lingui/react/macro";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
-import { MobileSheet } from "@/components/mobile-sheet";
 import { TitleDetailContent } from "@/components/titles/title-detail-content";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { getAppErrorCode } from "@/lib/error-messages";
 import { orpc } from "@/lib/orpc/client";
-import { getThemeCssProperties } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app/titles/$id")({
   staleTime: 60_000,
-  // Keep showing the current page (or title) while the next one loads, instead of swapping in a
-  // full-page skeleton, which would close the phone sheet and open it again
-  pendingMs: 3000,
   loader: async ({ params, context }) => {
     try {
       const [titleResult, userInfo] = await Promise.all([
@@ -48,13 +42,7 @@ export const Route = createFileRoute("/_app/titles/$id")({
 
 function TitleDetailPage() {
   const data = Route.useLoaderData();
-  const isMobile = useIsMobile();
-  // Phones: the page opens as a sheet like the mobile app (it has its own close button)
-  return (
-    <MobileSheet style={getThemeCssProperties(data.title.colorPalette)} resetKey={data.title.id}>
-      <TitleDetailContent data={data} showBackButton={!isMobile} />
-    </MobileSheet>
-  );
+  return <TitleDetailContent data={data} showBackButton={true} />;
 }
 
 function TitleDetailLoading() {
