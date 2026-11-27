@@ -20,7 +20,7 @@ import {
   searchTv,
 } from "@sofa/tmdb/client";
 import { isTmdbConfigured } from "@sofa/tmdb/config";
-import { tmdbImageUrl } from "@sofa/tmdb/image";
+import { tmdbCdnImageUrl, tmdbImageUrl } from "@sofa/tmdb/image";
 
 import { ensureBrowseTitlesExist } from "./metadata";
 import { ensureBrowsePersonsExist } from "./person";
@@ -134,6 +134,16 @@ export function toBrowseItem(r: TmdbListResult, type: MediaType): BrowseItem {
   };
 }
 
+/**
+ * Posters in browse lists (Explore, collections) load straight from TMDB's CDN. These lists show
+ * many titles you've never opened, so going through the local image cache meant the server had
+ * to download each poster first (and the browser could only fetch a few at a time from it).
+ * Titles you open or add still get their images cached locally as before.
+ */
+function browsePosterUrl(posterPath: string | null) {
+  return tmdbCdnImageUrl(posterPath, "posters") ?? tmdbImageUrl(posterPath, "posters");
+}
+
 /** Persists shell titles for `items` (plus any `extra` entries) and attaches ids and image URLs. */
 function withTitleIds(items: BrowseItem[], extra: BrowseItem[] = []) {
   const titleMap = ensureBrowseTitlesExist([...items, ...extra]);
@@ -142,7 +152,7 @@ function withTitleIds(items: BrowseItem[], extra: BrowseItem[] = []) {
     return {
       ...item,
       id: entry?.id ?? "",
-      posterPath: tmdbImageUrl(item.posterPath, "posters"),
+      posterPath: browsePosterUrl(item.posterPath),
       posterThumbHash: entry?.posterThumbHash ?? null,
     };
   });

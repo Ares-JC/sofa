@@ -113,7 +113,8 @@ describe("discover.trending", () => {
       firstAirDate: null,
       voteAverage: 8.2,
     });
-    expect(result.items[0]?.posterPath).toBe("/images/posters/matrix.jpg");
+    // Browse posters load straight from TMDB's CDN
+    expect(result.items[0]?.posterPath).toMatch(/\/w500\/matrix\.jpg$/);
     expect(result.items[0]?.id).toBeTruthy();
     expect(result.items[1]).toMatchObject({
       tmdbId: 1399,
@@ -122,7 +123,7 @@ describe("discover.trending", () => {
       releaseDate: null,
       firstAirDate: "2011-04-17",
     });
-    expect(result.items[1]?.posterPath).toBe("/images/posters/got.jpg");
+    expect(result.items[1]?.posterPath).toMatch(/\/w500\/got\.jpg$/);
     expect(result.items[1]?.id).toBeTruthy();
     expect(result.hero).toMatchObject({
       tmdbId: 603,
