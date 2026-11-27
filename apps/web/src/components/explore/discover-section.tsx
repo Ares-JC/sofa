@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { FeedSection } from "@/components/dashboard/feed-section";
 import { TitleGrid } from "@/components/dashboard/title-grid";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -411,6 +412,20 @@ export function DiscoverSection() {
             <div className="flex items-center justify-center py-4">
               <IconLoader className="text-muted-foreground size-5 animate-spin" />
             </div>
+          )}
+          {/* Say why the list stopped instead of leaving an empty space */}
+          {!isFetchingNextPage && isFetchNextPageError && (
+            <div className="flex flex-col items-center gap-2 py-6">
+              <p className="text-muted-foreground text-sm">{t`Couldn't load more`}</p>
+              <Button variant="outline" size="sm" onClick={() => void fetchNextPage()}>
+                {t`Try again`}
+              </Button>
+            </div>
+          )}
+          {!isFetchingNextPage && !isFetchNextPageError && !hasNextPage && (
+            <p className="text-muted-foreground py-6 text-center text-sm">
+              {t`That's everything for these filters.`}
+            </p>
           )}
         </>
       )}

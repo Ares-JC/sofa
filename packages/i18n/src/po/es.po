@@ -4243,3 +4243,7 @@ msgstr "Mantén presionado para marcar como visto"
 #: apps/web/src/components/title-card.tsx
 msgid "Keep holding to mark as watched"
 msgstr "Mantén presionado hasta que se llene el círculo"
+
+#: apps/web/src/components/explore/discover-section.tsx
+msgid "That's everything for these filters."
+msgstr "Eso es todo para estos filtros."
