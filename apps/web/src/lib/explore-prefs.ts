@@ -53,3 +53,20 @@ export function withoutLibraryTitles<T extends { id: string }>(
 ): T[] {
   return hide ? items.filter((item) => !statusOf(item)) : items;
 }
+
+/**
+ * Drop repeated titles from paged lists. TMDB pages can overlap when the ranking shifts between
+ * page loads (e.g. a refetch after marking something watched), and React then shows the same
+ * card several times.
+ */
+export function uniqueTitles<T extends { id: string; tmdbId?: number; type?: string }>(
+  items: T[],
+): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = item.id || `${item.type}-${item.tmdbId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}

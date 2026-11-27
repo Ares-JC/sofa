@@ -6,7 +6,7 @@ import { TitleCard, TitleCardSkeleton } from "@/components/title-card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
+import { uniqueTitles, useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 interface Genre {
@@ -75,7 +75,7 @@ export function FilterableTitleRow({
   );
 
   const discoverItems = useMemo(
-    () => discoverData?.pages.flatMap((p) => p.items) ?? [],
+    () => uniqueTitles(discoverData?.pages.flatMap((p) => p.items) ?? []),
     [discoverData?.pages],
   );
   const discoverStatuses = useMemo(

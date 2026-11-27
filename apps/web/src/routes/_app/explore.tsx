@@ -11,7 +11,7 @@ import { TitleRow } from "@/components/explore/title-row";
 import { RouteError } from "@/components/route-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { setHideInLibrary, useHideInLibrary } from "@/lib/explore-prefs";
+import { setHideInLibrary, uniqueTitles, useHideInLibrary } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 export const Route = createFileRoute("/_app/explore")({
@@ -108,7 +108,7 @@ function ExplorePage() {
   const hideInLibrary = useHideInLibrary();
 
   const trendingItems = useMemo(
-    () => trendingData?.pages.flatMap((p) => p.items) ?? [],
+    () => uniqueTitles(trendingData?.pages.flatMap((p) => p.items) ?? []),
     [trendingData?.pages],
   );
 

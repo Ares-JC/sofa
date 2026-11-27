@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
+import { uniqueTitles, useHideInLibrary, withoutLibraryTitles } from "@/lib/explore-prefs";
 import { orpc } from "@/lib/orpc/client";
 
 const DECADE_PRESETS = [
@@ -110,8 +110,7 @@ export function DiscoverSection() {
       string,
       { watched: number; total: number }
     >;
-    return pages
-      .flatMap((p) => p.items)
+    return uniqueTitles(pages.flatMap((p) => p.items))
       .map((item) =>
         Object.assign({}, item, {
           userStatus: statuses[item.id] ?? null,
