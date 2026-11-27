@@ -94,101 +94,168 @@ export function TitleHero({
       {/* Ambient glow orbs */}
       <AmbientGlow palette={palette} />
 
-      {/* Title header */}
+      {/* Title header. Phones: poster and title side by side over the backdrop, then the
+          buttons, then the synopsis (like the mobile app). Desktop: poster on the left, details
+          on the right. */}
       <div
-        className={`flex flex-col gap-4 md:flex-row md:gap-8 ${title.backdropPath ? "relative z-10 -mt-32" : ""}`}
+        className={`flex flex-col gap-5 md:flex-row md:gap-8 ${title.backdropPath ? "relative z-10 -mt-28 md:-mt-32" : ""}`}
       >
-        {title.posterPath && (
-          <div className="shrink-0 self-center md:self-start">
-            <div
-              className="ring-foreground/5 overflow-hidden rounded-xl shadow-2xl ring-1 transition-shadow duration-500 md:rounded-2xl"
-              style={{
-                boxShadow: palette?.darkVibrant
-                  ? `0 25px 60px -12px ${palette.darkVibrant}50, 0 12px 28px -8px rgba(0,0,0,0.5)`
-                  : "0 25px 50px -12px rgba(0,0,0,0.5)",
-                ...(title.posterThumbHash
-                  ? {
-                      backgroundImage: `url(${thumbHashToUrl(title.posterThumbHash)})`,
-                      backgroundSize: "cover",
-                    }
-                  : {}),
-              }}
-            >
-              <img
-                src={title.posterPath}
-                alt={title.title}
-                width={220}
-                height={330}
-                loading="eager"
-                decoding="async"
-                className="aspect-[2/3] w-[140px] object-cover md:w-[220px]"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="flex-1 space-y-5">
-          <div className="space-y-1.5">
-            <h1 className="font-display text-2xl tracking-tight text-balance md:text-5xl">
-              {title.title}
-            </h1>
-            {/* Desktop: single row with dot separators */}
-            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5">
-              <div className="bg-primary/10 text-primary inline-flex cursor-default items-center justify-center gap-1.5 rounded px-1 py-1 text-xs font-medium md:px-1.5">
-                {title.type === "movie" ? (
-                  <>
-                    <IconMovie aria-hidden className="size-3.5 translate-y-[-0.5px]" />
-                    <span className="hidden md:inline">
-                      <Trans>Movie</Trans>
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <IconDeviceTv aria-hidden className="size-3.5 translate-y-[-0.5px]" />
-                    <span className="hidden md:inline">
-                      <Trans>TV</Trans>
-                    </span>
-                  </>
-                )}
+        <div className="flex items-end gap-4 md:block md:shrink-0 md:self-start">
+          {title.posterPath && (
+            <div className="shrink-0">
+              <div
+                className="ring-foreground/5 overflow-hidden rounded-xl shadow-2xl ring-1 transition-shadow duration-500 md:rounded-2xl"
+                style={{
+                  boxShadow: palette?.darkVibrant
+                    ? `0 25px 60px -12px ${palette.darkVibrant}50, 0 12px 28px -8px rgba(0,0,0,0.5)`
+                    : "0 25px 50px -12px rgba(0,0,0,0.5)",
+                  ...(title.posterThumbHash
+                    ? {
+                        backgroundImage: `url(${thumbHashToUrl(title.posterThumbHash)})`,
+                        backgroundSize: "cover",
+                      }
+                    : {}),
+                }}
+              >
+                <img
+                  src={title.posterPath}
+                  alt={title.title}
+                  width={220}
+                  height={330}
+                  loading="eager"
+                  decoding="async"
+                  className="aspect-[2/3] w-[112px] object-cover md:w-[220px]"
+                />
               </div>
-              {title.contentRating && (
-                <div className="border-muted-foreground/50 inline-flex border px-1.5 text-[13px] font-medium">
-                  {title.contentRating}
+            </div>
+          )}
+          <div className="min-w-0 flex-1 pb-1 md:hidden">
+            <div className="space-y-1.5">
+              <h1 className="font-display text-[26px] leading-tight tracking-tight text-balance md:text-5xl md:leading-none">
+                {title.title}
+              </h1>
+              {/* Desktop: single row with dot separators */}
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5">
+                <div className="bg-primary text-primary-foreground md:bg-primary/10 md:text-primary inline-flex cursor-default items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium md:rounded md:px-1.5">
+                  {title.type === "movie" ? (
+                    <>
+                      <IconMovie aria-hidden className="size-3.5 translate-y-[-0.5px]" />
+                      <span className="hidden md:inline">
+                        <Trans>Movie</Trans>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <IconDeviceTv aria-hidden className="size-3.5 translate-y-[-0.5px]" />
+                      <span className="hidden md:inline">
+                        <Trans>TV</Trans>
+                      </span>
+                    </>
+                  )}
                 </div>
-              )}
-              {year && <span>{year}</span>}
-              {title.genres.length > 0 && <GenreCollapse genres={title.genres} />}
-              {title.voteAverage != null && title.voteAverage > 0 && (
-                <span className="text-primary inline-flex items-center gap-1">
-                  <IconStarFilled className="size-3.5 translate-y-[-0.5px]" />
-                  {title.voteAverage.toFixed(1)}
-                </span>
-              )}
-              {title.status &&
-                !(title.type === "movie" && title.status === "Released") &&
-                !(title.type === "tv" && title.status === "Returning Series") && (
-                  <span className="inline-flex items-center gap-1">
-                    <StatusIcon status={title.status} />
-                    {title.status}
+                {title.contentRating && (
+                  <div className="border-muted-foreground/50 inline-flex border px-1.5 text-[13px] font-medium">
+                    {title.contentRating}
+                  </div>
+                )}
+                {year && <span>{year}</span>}
+                {title.genres.length > 0 && <GenreCollapse genres={title.genres} />}
+                {title.voteAverage != null && title.voteAverage > 0 && (
+                  <span className="text-primary inline-flex items-center gap-1">
+                    <IconStarFilled className="size-3.5 translate-y-[-0.5px]" />
+                    {title.voteAverage.toFixed(1)}
                   </span>
                 )}
-              <a
-                href={`https://www.themoviedb.org/${title.type === "movie" ? "movie" : "tv"}/${title.tmdbId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t`View on TMDB`}
-                className="inline-flex items-center opacity-70 transition-opacity hover:opacity-40"
-              >
-                <TmdbLogo className="h-2.5 w-auto" />
-              </a>
+                {title.status &&
+                  !(title.type === "movie" && title.status === "Released") &&
+                  !(title.type === "tv" && title.status === "Returning Series") && (
+                    <span className="inline-flex items-center gap-1">
+                      <StatusIcon status={title.status} />
+                      {title.status}
+                    </span>
+                  )}
+                <a
+                  href={`https://www.themoviedb.org/${title.type === "movie" ? "movie" : "tv"}/${title.tmdbId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t`View on TMDB`}
+                  className="inline-flex items-center opacity-70 transition-opacity hover:opacity-40"
+                >
+                  <TmdbLogo className="h-2.5 w-auto" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-5">
+          <div className="hidden md:block">
+            <div className="space-y-1.5">
+              <h1 className="font-display text-[26px] leading-tight tracking-tight text-balance md:text-5xl md:leading-none">
+                {title.title}
+              </h1>
+              {/* Desktop: single row with dot separators */}
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5">
+                <div className="bg-primary text-primary-foreground md:bg-primary/10 md:text-primary inline-flex cursor-default items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium md:rounded md:px-1.5">
+                  {title.type === "movie" ? (
+                    <>
+                      <IconMovie aria-hidden className="size-3.5 translate-y-[-0.5px]" />
+                      <span className="hidden md:inline">
+                        <Trans>Movie</Trans>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <IconDeviceTv aria-hidden className="size-3.5 translate-y-[-0.5px]" />
+                      <span className="hidden md:inline">
+                        <Trans>TV</Trans>
+                      </span>
+                    </>
+                  )}
+                </div>
+                {title.contentRating && (
+                  <div className="border-muted-foreground/50 inline-flex border px-1.5 text-[13px] font-medium">
+                    {title.contentRating}
+                  </div>
+                )}
+                {year && <span>{year}</span>}
+                {title.genres.length > 0 && <GenreCollapse genres={title.genres} />}
+                {title.voteAverage != null && title.voteAverage > 0 && (
+                  <span className="text-primary inline-flex items-center gap-1">
+                    <IconStarFilled className="size-3.5 translate-y-[-0.5px]" />
+                    {title.voteAverage.toFixed(1)}
+                  </span>
+                )}
+                {title.status &&
+                  !(title.type === "movie" && title.status === "Released") &&
+                  !(title.type === "tv" && title.status === "Returning Series") && (
+                    <span className="inline-flex items-center gap-1">
+                      <StatusIcon status={title.status} />
+                      {title.status}
+                    </span>
+                  )}
+                <a
+                  href={`https://www.themoviedb.org/${title.type === "movie" ? "movie" : "tv"}/${title.tmdbId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t`View on TMDB`}
+                  className="inline-flex items-center opacity-70 transition-opacity hover:opacity-40"
+                >
+                  <TmdbLogo className="h-2.5 w-auto" />
+                </a>
+              </div>
             </div>
           </div>
 
-          {title.overview && <ExpandableText text={title.overview} />}
+          {title.overview && (
+            <div className="order-2 md:order-none">
+              <ExpandableText text={title.overview} />
+            </div>
+          )}
 
           {actions}
 
-          {children}
+          {children && <div className="order-3 md:order-none">{children}</div>}
         </div>
       </div>
     </>
