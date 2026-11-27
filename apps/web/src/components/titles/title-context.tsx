@@ -29,6 +29,9 @@ export function useTitleUserInfo() {
   const { data } = useQuery({
     ...orpc.tracking.userInfo.queryOptions({ input: { id: titleId } }),
     enabled: !!session,
+    // Always re-check when a title page opens: the status may have changed from a list (hold to
+    // mark watched, a collection, Plex/Jellyfin…) while an older copy was still cached
+    refetchOnMount: "always",
   });
   return {
     userStatus: data?.status ?? null,

@@ -44,6 +44,8 @@ export function CollectionButton() {
     ...orpc.titles.collection.queryOptions({ input: { id: titleId } }),
     enabled: titleType === "movie",
     staleTime: 10 * 60_000,
+    // The movies' watched marks may have changed elsewhere; re-check them when the page opens
+    refetchOnMount: "always",
   });
 
   const settle = {
