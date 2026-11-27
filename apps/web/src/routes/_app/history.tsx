@@ -118,8 +118,8 @@ function HistoryPage() {
 
   const header = (
     <div>
-      <h1 className="font-display text-2xl tracking-tight">{t`History`}</h1>
-      <p className="text-muted-foreground mt-1 text-sm">
+      <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{t`History`}</h1>
+      <p className="text-muted-foreground mt-2 text-base">
         <Trans>Everything you've watched, newest first.</Trans>
       </p>
     </div>

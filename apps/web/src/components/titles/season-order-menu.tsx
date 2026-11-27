@@ -115,7 +115,7 @@ export function SeasonOrderMenu() {
                 <DropdownMenuRadioItem key={group.id} value={group.id}>
                   <span className="flex min-w-0 flex-col">
                     <span className="truncate">{group.name}</span>
-                    <span className="text-muted-foreground text-[11px]">
+                    <span className="text-muted-foreground text-xs">
                       {kind ? `${kind} · ` : ""}
                       {t`${seasons} seasons · ${episodes} episodes`}
                     </span>

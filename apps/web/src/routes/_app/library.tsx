@@ -184,9 +184,9 @@ function LibraryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <IconBooks aria-hidden={true} className="text-primary size-5" />
-          <h1 className="font-display text-xl tracking-tight">{t`Library`}</h1>
+        <div className="flex items-center gap-3">
+          <IconBooks aria-hidden={true} className="text-primary size-7" />
+          <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{t`Library`}</h1>
         </div>
         <Link to="/history" className={buttonVariants({ variant: "outline", size: "sm" })}>
           <IconHistory aria-hidden={true} />

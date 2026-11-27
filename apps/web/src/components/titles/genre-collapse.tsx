@@ -21,7 +21,7 @@ export function GenreCollapse({ genres }: { genres: string[] }) {
         </PopoverTrigger>
         <PopoverContent className="flex w-auto max-w-48 min-w-28 flex-col gap-0 p-1">
           {remaining.map((genre) => (
-            <span key={genre} className="text-popover-foreground px-2 py-1 text-[13px]">
+            <span key={genre} className="text-popover-foreground px-2 py-1 text-sm">
               {genre}
             </span>
           ))}

@@ -372,8 +372,8 @@ function CardInner({
         )}
       </div>
 
-      <div className="px-3 pt-2.5 pb-3">
-        <div className="flex items-center gap-1.5">
+      <div className="px-3.5 pt-3 pb-3.5">
+        <div className="flex items-center gap-2">
           {userStatus && (
             <Tooltip>
               <TooltipTrigger
@@ -392,17 +392,17 @@ function CardInner({
               <TooltipContent>{statusConfig[userStatus].label}</TooltipContent>
             </Tooltip>
           )}
-          <p className="line-clamp-1 text-sm leading-snug font-medium">{title}</p>
+          <p className="line-clamp-1 text-[0.9375rem] leading-snug font-medium">{title}</p>
         </div>
-        <div className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-xs">
-          <span className="border-primary/25 bg-primary/10 text-primary inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-px text-[10px] font-medium tracking-wide uppercase">
+        <div className="text-muted-foreground mt-2 flex items-center gap-2 text-[0.8125rem]">
+          <span className="border-primary/25 bg-primary/10 text-primary inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-px text-[0.6875rem] font-medium tracking-wide uppercase">
             <TypeIcon aria-hidden={true} className="size-3" />
             {typeLabel}
           </span>
           {year && <span>{year}</span>}
           {voteAverage != null && voteAverage > 0 && (
             <span className="text-primary/80 ml-auto flex items-center gap-0.5">
-              <IconStarFilled aria-hidden={true} className="size-[11px]" />
+              <IconStarFilled aria-hidden={true} className="size-3" />
               {voteAverage.toFixed(1)}
             </span>
           )}

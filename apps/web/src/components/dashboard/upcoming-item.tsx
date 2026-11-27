@@ -70,10 +70,10 @@ export function UpcomingRow({ item }: { item: UpcomingItem }) {
       <Link
         to="/titles/$id"
         params={{ id: item.titleId }}
-        className={`group bg-card/40 hover:bg-card/60 hover:shadow-primary/5 hover:ring-primary/25 flex items-center gap-4 rounded-xl py-3 ps-3 ring-1 ring-white/[0.06] transition-[background,box-shadow,ring-color] duration-200 hover:shadow-lg ${quickWatchEpisodeId ? "pe-12" : "pe-3"}`}
+        className={`group bg-card/40 hover:bg-card/60 hover:shadow-primary/5 hover:ring-primary/25 flex items-center gap-5 rounded-2xl py-3.5 ps-3.5 ring-1 ring-white/[0.06] transition-[background,box-shadow,ring-color] duration-200 hover:shadow-lg ${quickWatchEpisodeId ? "pe-14" : "pe-4"}`}
       >
         {/* Poster */}
-        <div className="relative h-[66px] w-11 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/[0.06]">
+        <div className="relative aspect-[2/3] w-14 shrink-0 overflow-hidden rounded-lg shadow-md ring-1 ring-white/[0.08]">
           {item.posterPath ? (
             <img
               src={item.posterPath}
@@ -109,22 +109,22 @@ export function UpcomingRow({ item }: { item: UpcomingItem }) {
               </TooltipTrigger>
               <TooltipContent side="top">{statusLabels[item.userStatus]}</TooltipContent>
             </Tooltip>
-            <span className="truncate text-sm font-medium">{item.titleName}</span>
+            <span className="truncate text-base font-medium">{item.titleName}</span>
             {item.isNewSeason && (
-              <span className="bg-primary/15 text-primary shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+              <span className="bg-primary/15 text-primary shrink-0 rounded px-1.5 py-0.5 text-[0.6875rem] font-semibold tracking-wider uppercase">
                 {t`New Season`}
               </span>
             )}
           </div>
-          <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
-            {item.titleType === "movie" && <IconMovie className="size-3 shrink-0" />}
+          <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-sm">
+            {item.titleType === "movie" && <IconMovie className="size-3.5 shrink-0" />}
             <span className="truncate">{subtitle}</span>
           </div>
         </div>
 
         {/* Right column: date + provider logo */}
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-muted-foreground text-xs">{formatShortDate(item.date)}</span>
+          <span className="text-muted-foreground text-sm">{formatShortDate(item.date)}</span>
           {item.streamingProvider && (
             <Tooltip>
               <TooltipTrigger className="shrink-0">
@@ -132,10 +132,10 @@ export function UpcomingRow({ item }: { item: UpcomingItem }) {
                   <img
                     src={item.streamingProvider.logoPath}
                     alt={item.streamingProvider.providerName}
-                    className="size-7 rounded-lg ring-1 ring-white/[0.06]"
+                    className="size-8 rounded-lg ring-1 ring-white/[0.06]"
                   />
                 ) : (
-                  <span className="text-muted-foreground/60 text-[10px]">
+                  <span className="text-muted-foreground/60 text-[0.6875rem]">
                     {item.streamingProvider.providerName}
                   </span>
                 )}

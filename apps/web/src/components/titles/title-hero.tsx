@@ -131,11 +131,11 @@ export function TitleHero({
           )}
           <div className="min-w-0 flex-1 pb-1 md:hidden">
             <div className="space-y-1.5">
-              <h1 className="font-display text-[26px] leading-tight tracking-tight text-balance md:text-5xl md:leading-none">
+              <h1 className="font-display text-[1.625rem] leading-tight tracking-tight text-balance md:text-6xl md:leading-none">
                 {title.title}
               </h1>
               {/* Desktop: single row with dot separators */}
-              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5 md:text-base">
                 <div className="bg-primary text-primary-foreground md:bg-primary/10 md:text-primary inline-flex cursor-default items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium md:rounded md:px-1.5">
                   {title.type === "movie" ? (
                     <>
@@ -154,7 +154,7 @@ export function TitleHero({
                   )}
                 </div>
                 {title.contentRating && (
-                  <div className="border-muted-foreground/50 inline-flex border px-1.5 text-[13px] font-medium">
+                  <div className="border-muted-foreground/50 inline-flex border px-1.5 text-sm font-medium">
                     {title.contentRating}
                   </div>
                 )}
@@ -191,11 +191,11 @@ export function TitleHero({
         <div className="flex flex-1 flex-col gap-5">
           <div className="hidden md:block">
             <div className="space-y-1.5">
-              <h1 className="font-display text-[26px] leading-tight tracking-tight text-balance md:text-5xl md:leading-none">
+              <h1 className="font-display text-[1.625rem] leading-tight tracking-tight text-balance md:text-6xl md:leading-none">
                 {title.title}
               </h1>
               {/* Desktop: single row with dot separators */}
-              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm md:gap-x-5 md:text-base">
                 <div className="bg-primary text-primary-foreground md:bg-primary/10 md:text-primary inline-flex cursor-default items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium md:rounded md:px-1.5">
                   {title.type === "movie" ? (
                     <>
@@ -214,7 +214,7 @@ export function TitleHero({
                   )}
                 </div>
                 {title.contentRating && (
-                  <div className="border-muted-foreground/50 inline-flex border px-1.5 text-[13px] font-medium">
+                  <div className="border-muted-foreground/50 inline-flex border px-1.5 text-sm font-medium">
                     {title.contentRating}
                   </div>
                 )}

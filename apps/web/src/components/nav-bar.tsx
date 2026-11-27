@@ -166,7 +166,7 @@ export function NavBar({
                   }}
                   to={link.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`focus-visible:ring-primary/40 relative z-10 inline-flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm lg:px-3.5 lg:text-[15px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                  className={`focus-visible:ring-primary/40 relative z-10 inline-flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm lg:px-3.5 lg:text-[0.9375rem] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -193,7 +193,7 @@ export function NavBar({
           <button
             type="button"
             onClick={() => setCommandPaletteOpen(true)}
-            className="border-border/50 bg-card/50 text-muted-foreground hover:border-primary/20 hover:bg-card flex flex-1 items-center gap-2 rounded-lg border px-3 py-1.5 text-[13px] transition-colors sm:hidden"
+            className="border-border/50 bg-card/50 text-muted-foreground hover:border-primary/20 hover:bg-card flex flex-1 items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors sm:hidden"
           >
             <IconSearch aria-hidden={true} className="size-3.5" />
             <span>{t`Search…`}</span>
@@ -202,7 +202,7 @@ export function NavBar({
           <button
             type="button"
             onClick={() => setCommandPaletteOpen(true)}
-            className="border-border/50 bg-card/50 text-muted-foreground hover:border-primary/20 hover:bg-card hidden items-center gap-2 rounded-lg border px-3 py-1.5 text-[13px] transition-colors sm:inline-flex"
+            className="border-border/50 bg-card/50 text-muted-foreground hover:border-primary/20 hover:bg-card hidden items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors sm:inline-flex"
           >
             <IconSearch aria-hidden={true} className="size-3.5" />
             <span>{t`Search…`}</span>
@@ -234,7 +234,7 @@ export function NavBar({
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="text-foreground truncate text-[15px] leading-tight font-medium">
+                  <p className="text-foreground truncate text-[0.9375rem] leading-tight font-medium">
                     {userName}
                     {userRole === "admin" && (
                       <Badge className="bg-primary/10 text-primary ms-1.5 mb-0.5 rounded-md border-0 align-middle">
@@ -242,7 +242,7 @@ export function NavBar({
                       </Badge>
                     )}
                   </p>
-                  <p className="text-muted-foreground mt-0.5 truncate text-[13px]">{userEmail}</p>
+                  <p className="text-muted-foreground mt-0.5 truncate text-sm">{userEmail}</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
@@ -276,7 +276,7 @@ export function NavBar({
           >
             <Avatar size="sm">
               <AvatarImage src={userImage} alt={userName} />
-              <AvatarFallback className="bg-primary/10 font-display text-primary text-[10px]">
+              <AvatarFallback className="bg-primary/10 font-display text-primary text-[0.6875rem]">
                 {initial}
               </AvatarFallback>
             </Avatar>
@@ -330,7 +330,7 @@ export function MobileTabBar() {
             >
               <Icon className={`size-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
               <span
-                className={`text-[10px] font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                className={`text-[0.6875rem] font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}
               >
                 {tab.label}
               </span>

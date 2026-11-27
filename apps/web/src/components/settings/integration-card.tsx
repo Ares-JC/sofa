@@ -235,7 +235,7 @@ export function IntegrationCard({
                           id={`${config.provider}-url`}
                           readOnly
                           value={url}
-                          className="text-muted-foreground font-mono text-[10px]"
+                          className="text-muted-foreground font-mono text-[0.6875rem]"
                         />
                         <InputGroupAddon align="inline-end">
                           <Tooltip>

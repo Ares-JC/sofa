@@ -217,10 +217,10 @@ function SystemStatusCard({
       {/* Database */}
       <CardContent className="border-border/30 border-t pt-4">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground/70 text-[11px] font-medium tracking-wider uppercase">
+          <span className="text-muted-foreground/70 text-xs font-medium tracking-wider uppercase">
             <Trans>Database</Trans>
           </span>
-          <span className="text-muted-foreground font-mono text-[11px]">
+          <span className="text-muted-foreground font-mono text-xs">
             {formatBytes(database.dbSizeBytes)}
             {database.walSizeBytes > 0 && ` + ${formatBytes(database.walSizeBytes)} WAL`}
           </span>
@@ -230,7 +230,7 @@ function SystemStatusCard({
       {/* TMDB */}
       <CardContent className="border-border/30 border-t pt-4">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground/70 text-[11px] font-medium tracking-wider uppercase">
+          <span className="text-muted-foreground/70 text-xs font-medium tracking-wider uppercase">
             TMDB API
           </span>
           {!tmdb.tokenConfigured ? (
@@ -246,7 +246,7 @@ function SystemStatusCard({
               <span className="text-muted-foreground text-xs">
                 <Trans>Connected</Trans>
               </span>
-              <span className="text-muted-foreground/80 font-mono text-[11px]">
+              <span className="text-muted-foreground/80 font-mono text-xs">
                 {tmdb.responseTimeMs}ms
               </span>
             </>
@@ -264,7 +264,7 @@ function SystemStatusCard({
                 <Trans>Unreachable</Trans>
               </span>
               {tmdb.error && (
-                <span className="text-muted-foreground/50 text-[11px]">{tmdb.error}</span>
+                <span className="text-muted-foreground/50 text-xs">{tmdb.error}</span>
               )}
             </>
           )}
@@ -274,7 +274,7 @@ function SystemStatusCard({
       {/* Environment */}
       <CardContent className="border-border/30 border-t pt-4">
         <div className="space-y-2">
-          <span className="text-muted-foreground/70 inline-flex items-center gap-1.5 text-[11px] font-medium tracking-wider uppercase">
+          <span className="text-muted-foreground/70 inline-flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase">
             <Trans>Environment</Trans>
             {environment.dataDirWritable ? (
               <IconCheck aria-hidden={true} className="size-3 text-green-500" />
@@ -288,7 +288,7 @@ function SystemStatusCard({
               .map((env) => (
                 <div
                   key={env.name}
-                  className="flex items-baseline gap-[1px] font-mono text-[11px] leading-relaxed"
+                  className="flex items-baseline gap-[1px] font-mono text-xs leading-relaxed"
                 >
                   <span className="text-muted-foreground/60">{env.name}=</span>
                   <span className="text-muted-foreground break-all">{env.value}</span>
@@ -377,19 +377,19 @@ function BackgroundJobsCard({
         <Table>
           <TableHeader>
             <TableRow className="border-b-border/30 hover:bg-transparent">
-              <TableHead className="text-muted-foreground h-8 ps-5 text-[10px] font-medium tracking-wider uppercase">
+              <TableHead className="text-muted-foreground h-8 ps-5 text-[0.6875rem] font-medium tracking-wider uppercase">
                 <Trans>Job</Trans>
               </TableHead>
-              <TableHead className="text-muted-foreground h-8 text-[10px] font-medium tracking-wider uppercase">
+              <TableHead className="text-muted-foreground h-8 text-[0.6875rem] font-medium tracking-wider uppercase">
                 <Trans>Schedule</Trans>
               </TableHead>
-              <TableHead className="text-muted-foreground h-8 text-[10px] font-medium tracking-wider uppercase">
+              <TableHead className="text-muted-foreground h-8 text-[0.6875rem] font-medium tracking-wider uppercase">
                 <Trans>Last run</Trans>
               </TableHead>
-              <TableHead className="text-muted-foreground h-8 text-[10px] font-medium tracking-wider uppercase">
+              <TableHead className="text-muted-foreground h-8 text-[0.6875rem] font-medium tracking-wider uppercase">
                 <Trans>Next run</Trans>
               </TableHead>
-              <TableHead className="text-muted-foreground h-8 pe-5 text-end text-[10px] font-medium tracking-wider uppercase">
+              <TableHead className="text-muted-foreground h-8 pe-5 text-end text-[0.6875rem] font-medium tracking-wider uppercase">
                 <span className="sr-only">
                   <Trans>Actions</Trans>
                 </span>
@@ -451,7 +451,7 @@ function BackgroundJobsCard({
                               <LiveTimeAgo date={job.lastRunAt} />
                             </span>
                             {job.lastDurationMs !== null && job.lastDurationMs > 0 && (
-                              <span className="text-muted-foreground/50 font-mono text-[10px]">
+                              <span className="text-muted-foreground/50 font-mono text-[0.6875rem]">
                                 {formatDuration(job.lastDurationMs)}
                               </span>
                             )}
@@ -569,11 +569,11 @@ function StorageCard({
       {/* Image cache */}
       <CardContent className="border-border/30 border-t pt-4">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground/70 text-[11px] font-medium tracking-wider uppercase">
+          <span className="text-muted-foreground/70 text-xs font-medium tracking-wider uppercase">
             <Trans>Image cache</Trans>
           </span>
           {imageCache.enabled ? (
-            <span className="text-muted-foreground/50 font-mono text-[11px]">
+            <span className="text-muted-foreground/50 font-mono text-xs">
               {formatBytes(imageCache.totalSizeBytes)}
             </span>
           ) : null}
@@ -583,7 +583,7 @@ function StorageCard({
             <p className="text-muted-foreground mt-1 text-xs">
               {plural(cachedImageCount, { one: "# cached image", other: "# cached images" })}
             </p>
-            <p className="text-muted-foreground/50 mt-0.5 text-[10px] leading-relaxed">
+            <p className="text-muted-foreground/50 mt-0.5 text-[0.6875rem] leading-relaxed">
               {Object.entries(imageCache.categories)
                 .map(([name, cat]) => `${name} ${cat.count}`)
                 .join(" · ")}
@@ -600,11 +600,11 @@ function StorageCard({
       {/* Backup summary */}
       <CardContent className="border-border/30 border-t pt-4">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground/70 text-[11px] font-medium tracking-wider uppercase">
+          <span className="text-muted-foreground/70 text-xs font-medium tracking-wider uppercase">
             <Trans>Backups</Trans>
           </span>
           {backupCount > 0 && (
-            <span className="text-muted-foreground/50 font-mono text-[11px]">
+            <span className="text-muted-foreground/50 font-mono text-xs">
               {formatBytes(backups.totalSizeBytes)}
             </span>
           )}

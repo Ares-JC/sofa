@@ -291,14 +291,14 @@ export function CommandPalette() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="text-muted-foreground flex h-full items-center justify-center text-[8px]">
+                            <div className="text-muted-foreground flex h-full items-center justify-center text-[0.5625rem]">
                               ?
                             </div>
                           )}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[15px] font-medium">{r.title}</p>
+                        <p className="truncate text-[0.9375rem] font-medium">{r.title}</p>
                         <div className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-xs">
                           {r.type === "person" ? (
                             <IconUser aria-hidden={true} className="size-3.5" />
@@ -335,7 +335,7 @@ export function CommandPalette() {
                           <button
                             type="button"
                             onClick={handleClearRecent}
-                            className="text-muted-foreground hover:text-foreground text-[10px] font-normal transition-colors"
+                            className="text-muted-foreground hover:text-foreground text-[0.6875rem] font-normal transition-colors"
                           >
                             <Trans>Clear all</Trans>
                           </button>
@@ -420,7 +420,7 @@ export function CommandPalette() {
           <div className="space-y-5 py-2">
             {SHORTCUT_GROUPS.map((group) => (
               <div key={i18n._(group.scope)} className="space-y-2">
-                <h3 className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+                <h3 className="text-muted-foreground text-[0.6875rem] font-semibold tracking-wider uppercase">
                   {i18n._(group.scope)}
                 </h3>
                 <div className="space-y-1">
@@ -434,7 +434,7 @@ export function CommandPalette() {
                         {item.keys.map((key, i) => (
                           <span key={key} className="flex items-center gap-1">
                             {i > 0 && (
-                              <span className="text-muted-foreground text-[10px]">
+                              <span className="text-muted-foreground text-[0.6875rem]">
                                 <Trans>then</Trans>
                               </span>
                             )}

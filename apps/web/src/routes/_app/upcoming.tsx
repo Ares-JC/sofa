@@ -225,10 +225,10 @@ function UpcomingHeader({ view }: { view: "upcoming" | "recent" }) {
   const { t } = useLingui();
   return (
     <div>
-      <h1 className="font-display text-2xl tracking-tight">
+      <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
         {view === "recent" ? t`Recently aired` : t`Upcoming`}
       </h1>
-      <p className="text-muted-foreground mt-1 text-sm">
+      <p className="text-muted-foreground mt-2 text-base">
         {view === "recent" ? (
           <Trans>Unwatched episodes from the last 90 days.</Trans>
         ) : (

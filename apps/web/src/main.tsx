@@ -4,8 +4,12 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { orpc, queryClient } from "@/lib/orpc/client";
+import { applyTextSize } from "@/lib/text-size";
 
 import { routeTree } from "./routeTree.gen";
+
+// Text size from Settings, applied before the first paint
+applyTextSize();
 
 const router = createRouter({
   routeTree,

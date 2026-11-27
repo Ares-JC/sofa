@@ -258,7 +258,7 @@ export function TitleSeasons({
                                 className="h-full w-full object-cover"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                              <span className="absolute start-3 bottom-2 font-mono text-[10px] text-white/70">
+                              <span className="absolute start-3 bottom-2 font-mono text-[0.6875rem] text-white/70">
                                 E{String(ep.episodeNumber).padStart(2, "0")}
                               </span>
                             </div>

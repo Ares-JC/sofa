@@ -64,7 +64,7 @@ export function PlatformGrid({ platforms, selectedIds, onToggle }: PlatformGridP
             )}
 
             {/* Name */}
-            <span className="text-muted-foreground line-clamp-1 w-full text-center text-[11px] leading-tight">
+            <span className="text-muted-foreground line-clamp-1 w-full text-center text-xs leading-tight">
               {platform.name}
             </span>
           </button>

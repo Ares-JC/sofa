@@ -18,7 +18,7 @@ export function FeedSection({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span aria-hidden={true}>{icon}</span>
-          <h2 className="font-display text-xl tracking-tight text-balance">{title}</h2>
+          <h2 className="font-display text-2xl tracking-tight sm:text-[1.75rem] text-balance">{title}</h2>
         </div>
         {seeAllLink && (
           <Link to={seeAllLink} className="text-primary text-sm hover:underline">

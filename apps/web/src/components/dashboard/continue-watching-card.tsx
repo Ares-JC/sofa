@@ -88,7 +88,7 @@ export function ContinueWatchingCard({ item }: { item: ContinueWatchingItemProps
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           {isMovie && playback && (
             <div className="absolute right-3 bottom-2.5 left-3">
-              <p className="text-primary flex items-center gap-1.5 text-[10px] font-medium tracking-wider uppercase">
+              <p className="text-primary flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase">
                 <span className="bg-primary inline-block h-1.5 w-1.5 rounded-full motion-safe:animate-pulse" />
                 {t`Resume · ${remaining} min left`}
               </p>
@@ -96,12 +96,12 @@ export function ContinueWatchingCard({ item }: { item: ContinueWatchingItemProps
           )}
           {item.nextEpisode && (
             <div className="absolute right-3 bottom-2.5 left-3">
-              <p className="text-primary flex items-center gap-1.5 text-[10px] font-medium tracking-wider uppercase">
+              <p className="text-primary flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase">
                 <span className="bg-primary inline-block h-1.5 w-1.5 rounded-full motion-safe:animate-pulse" />
                 {playback ? t`Resume · ${remaining} min left` : t`Up next`}
               </p>
-              <p className="mt-0.5 truncate text-sm font-medium text-white">
-                <span className="me-0.5 font-mono text-xs text-white/60 [word-spacing:-0.25em]">
+              <p className="mt-1 truncate text-base font-medium text-white">
+                <span className="me-0.5 font-mono text-sm text-white/60 [word-spacing:-0.25em]">
                   S{item.nextEpisode.seasonNumber} E{item.nextEpisode.episodeNumber}
                 </span>{" "}
                 {item.nextEpisode.name}
@@ -111,14 +111,14 @@ export function ContinueWatchingCard({ item }: { item: ContinueWatchingItemProps
         </div>
         <div className="flex items-center gap-3 p-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{item.title.title}</p>
-            <p className="text-muted-foreground text-xs">
+            <p className="truncate text-base font-medium">{item.title.title}</p>
+            <p className="text-muted-foreground text-sm">
               {isMovie
                 ? t`Movie`
                 : t`${watchedEpisodes}/${plural(totalEpisodes, { one: "# episode", other: "# episodes" })}`}
             </p>
           </div>
-          <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors">
+          <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-full transition-colors">
             <IconPlayerPlay aria-hidden={true} className="size-3.5" />
           </div>
         </div>

@@ -167,11 +167,11 @@ export function BackupSection() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-2">
                           <span className="text-foreground text-xs font-medium">{backupDate}</span>
-                          <span className="text-muted-foreground text-[11px]">
+                          <span className="text-muted-foreground text-xs">
                             {formatBytesI18n(backup.sizeBytes)}
                           </span>
                           <span
-                            className="text-muted-foreground/50 text-[11px]"
+                            className="text-muted-foreground/50 text-xs"
                             suppressHydrationWarning
                           >
                             {formatRelativeTime(backup.createdAt)}

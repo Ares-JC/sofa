@@ -63,7 +63,7 @@ export function FilmographyGrid({ credits, userStatuses }: FilmographyGridProps)
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <IconMovie aria-hidden={true} className="text-primary size-5" />
-          <h2 className="font-display text-xl tracking-tight text-balance">
+          <h2 className="font-display text-2xl tracking-tight sm:text-[1.75rem] text-balance">
             <Trans>Filmography</Trans>
           </h2>
           <span className="text-muted-foreground text-sm">({filtered.length})</span>

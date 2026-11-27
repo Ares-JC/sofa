@@ -130,26 +130,26 @@ export function CollectionButton() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
-          <DialogHeader className="relative gap-1 overflow-hidden px-6 pt-8 pb-5">
+        <DialogContent className="flex max-h-[88vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="relative gap-1 overflow-hidden px-7 pt-10 pb-6">
             {collection.backdropPath && (
               <img
                 src={collection.backdropPath}
                 alt=""
                 aria-hidden={true}
-                className="absolute inset-0 h-full w-full object-cover opacity-30"
+                className="absolute inset-0 h-full w-full object-cover opacity-35"
               />
             )}
             <div className="from-background via-background/80 to-background/40 absolute inset-0 bg-gradient-to-t" />
-            <div className="relative space-y-3 pe-8">
-              <div className="space-y-1">
-                <DialogTitle className="font-display text-xl tracking-tight">
+            <div className="relative space-y-4 pe-10">
+              <div className="space-y-2">
+                <DialogTitle className="font-display text-3xl leading-tight tracking-tight text-balance">
                   {collection.name}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-base">
                   {complete ? (
-                    <span className="inline-flex items-center gap-1.5 font-medium text-amber-300">
-                      <IconTrophy aria-hidden={true} className="size-3.5" />
+                    <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-sm font-semibold text-amber-300 shadow-[0_0_20px_-6px] shadow-amber-400/50">
+                      <IconTrophy aria-hidden={true} className="size-4" />
                       {t`Collection complete!`}
                     </span>
                   ) : (
@@ -161,13 +161,13 @@ export function CollectionButton() {
                 </DialogDescription>
               </div>
               <Progress
+                className={`[&_[data-slot=progress-track]]:h-2 [&_[data-slot=progress-track]]:rounded-full ${complete ? "[&_[data-slot=progress-indicator]]:bg-amber-400" : ""}`}
                 value={released.length > 0 ? (watchedCount / released.length) * 100 : 0}
-                className={complete ? "[&_[data-slot=progress-indicator]]:bg-amber-400" : undefined}
               />
             </div>
           </DialogHeader>
 
-          <ul className="min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-3">
+          <ul className="min-h-0 flex-1 space-y-1.5 overflow-x-hidden overflow-y-auto px-4 py-4">
             {movies.map((item) => {
               const watched = isWatched(item.id);
               const busy = pending.has(item.id);
@@ -176,34 +176,34 @@ export function CollectionButton() {
               return (
                 <li
                   key={item.tmdbId}
-                  className={`flex items-center gap-4 rounded-xl p-2.5 transition-colors ${current ? "bg-primary/10" : "hover:bg-accent/40"}`}
+                  className={`flex items-center gap-5 rounded-xl p-3 transition-colors ${current ? "bg-primary/10" : "hover:bg-accent/40"}`}
                 >
                   <Link
                     to="/titles/$id"
                     params={{ id: item.id }}
                     onClick={() => setOpen(false)}
-                    className="flex min-w-0 flex-1 items-center gap-4"
+                    className="flex min-w-0 flex-1 items-center gap-5"
                   >
-                    <div className="bg-muted h-[72px] w-12 shrink-0 overflow-hidden rounded-md shadow-md">
+                    <div className="bg-muted aspect-[2/3] w-16 shrink-0 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10">
                       {item.posterPath && (
                         <img
                           src={item.posterPath}
                           alt=""
-                          width={48}
-                          height={72}
+                          width={64}
+                          height={96}
                           loading="lazy"
                           decoding="async"
                           className="h-full w-full object-cover"
                         />
                       )}
                     </div>
-                    <div className="min-w-0 space-y-0.5">
+                    <div className="min-w-0 space-y-1">
                       <p
-                        className={`line-clamp-2 text-sm leading-snug ${current ? "text-primary font-medium" : ""}`}
+                        className={`line-clamp-2 text-base leading-snug font-medium ${current ? "text-primary" : ""}`}
                       >
                         {item.title}
                       </p>
-                      <p className="text-muted-foreground text-xs">
+                      <p className="text-muted-foreground text-sm">
                         {isReleased(item.releaseDate)
                           ? year
                           : item.releaseDate
@@ -215,16 +215,15 @@ export function CollectionButton() {
                   </Link>
                   <Button
                     variant={watched ? "secondary" : "outline"}
-                    size="sm"
                     disabled={busy || (!watched && !isReleased(item.releaseDate))}
                     onClick={() => toggle([item.id], !watched)}
                     aria-label={watched ? t`Mark Unwatched` : t`Mark Watched`}
                     className={`shrink-0 ${watched ? "text-primary" : ""}`}
                   >
                     {busy ? (
-                      <IconLoader aria-hidden={true} className="size-3.5 animate-spin" />
+                      <IconLoader aria-hidden={true} className="size-4 animate-spin" />
                     ) : (
-                      <IconCheck aria-hidden={true} className="size-3.5" />
+                      <IconCheck aria-hidden={true} className="size-4" />
                     )}
                     {watched ? t`Watched` : t`Mark Watched`}
                   </Button>
@@ -234,9 +233,9 @@ export function CollectionButton() {
           </ul>
 
           {unwatchedIds.length > 1 && (
-            <div className="border-border/50 flex justify-end border-t px-6 py-3">
-              <Button variant="ghost" size="sm" onClick={() => toggle(unwatchedIds, true)}>
-                <IconChecks aria-hidden={true} className="size-3.5" />
+            <div className="border-border/50 flex justify-end border-t px-6 py-4">
+              <Button variant="outline" onClick={() => toggle(unwatchedIds, true)}>
+                <IconChecks aria-hidden={true} className="size-4" />
                 {t`Mark all watched`}
               </Button>
             </div>

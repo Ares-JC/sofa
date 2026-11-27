@@ -37,7 +37,7 @@ export function TitleRecommendations({ titleId }: { titleId: string }) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <IconThumbUp aria-hidden={true} className="text-primary size-5" />
-        <h2 className="font-display text-xl tracking-tight">
+        <h2 className="font-display text-2xl tracking-tight sm:text-[1.75rem]">
           <Trans>Recommended</Trans>
         </h2>
       </div>

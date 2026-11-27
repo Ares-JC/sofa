@@ -144,7 +144,7 @@ function SetupPage() {
                       className="group border-border/50 bg-card/60 relative rounded-lg border"
                     >
                       <div className="border-border/30 flex items-center justify-between border-b px-3 py-1.5">
-                        <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+                        <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                           {snippet.label}
                         </span>
                         <CopyButton code={snippet.code} />
@@ -184,7 +184,7 @@ function SetupPage() {
         >
           <TmdbLogo className="h-3" />
         </a>
-        <p className="text-muted-foreground text-[10px] leading-relaxed">
+        <p className="text-muted-foreground text-[0.6875rem] leading-relaxed">
           <Trans>This product uses the TMDB API but is not endorsed or certified by TMDB.</Trans>
         </p>
       </div>

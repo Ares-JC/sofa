@@ -40,10 +40,10 @@ function ProviderBadge({
             className="h-full w-full object-cover"
           />
         ) : (
-          <span className="text-muted-foreground text-[8px] font-medium">{name.slice(0, 2)}</span>
+          <span className="text-muted-foreground text-[0.5625rem] font-medium">{name.slice(0, 2)}</span>
         )}
       </TooltipTrigger>
-      <TooltipContent className="bg-popover text-popover-foreground px-2 py-1 text-[10px] font-medium shadow-md [&>:last-child]:hidden">
+      <TooltipContent className="bg-popover text-popover-foreground px-2 py-1 text-[0.6875rem] font-medium shadow-md [&>:last-child]:hidden">
         {name}
       </TooltipContent>
     </Tooltip>
@@ -64,7 +64,7 @@ function OverflowProviderIcon({ offer }: { offer: AvailabilityOffer }) {
           className="h-7 w-7 object-cover"
         />
       ) : (
-        <span className="text-muted-foreground text-[7px] font-medium">
+        <span className="text-muted-foreground text-[0.5rem] font-medium">
           {offer.providerName.slice(0, 2)}
         </span>
       )}
@@ -129,7 +129,7 @@ function OffersByType({
 
         return (
           <div key={type} className="space-y-1.5">
-            <span className="text-muted-foreground/60 text-[10px] font-medium tracking-wider uppercase">
+            <span className="text-muted-foreground/60 text-[0.6875rem] font-medium tracking-wider uppercase">
               {offerLabels[type] ?? type}
             </span>
             <div className="flex gap-1.5">
@@ -175,7 +175,7 @@ export function TitleAvailability({ availability }: { availability: Availability
 
         {otherOffers.length > 0 && (
           <div className="border-border/30 space-y-2 border-t pt-3">
-            <h2 className="text-muted-foreground/60 text-[10px] font-medium tracking-wider uppercase">
+            <h2 className="text-muted-foreground/60 text-[0.6875rem] font-medium tracking-wider uppercase">
               <Trans>Also available on</Trans>
             </h2>
             <div className="opacity-60">

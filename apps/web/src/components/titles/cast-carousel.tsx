@@ -9,7 +9,7 @@ import type { CastMember } from "@sofa/api/schemas";
 
 function EpisodeCountLabel({ count }: { count: number }) {
   return (
-    <p className="text-muted-foreground/70 text-[10px]">
+    <p className="text-muted-foreground/70 text-[0.6875rem]">
       {plural(count, { one: "# ep", other: "# eps" })}
     </p>
   );
@@ -25,7 +25,7 @@ export function CastCarousel({ actors, titleType }: CastCarouselProps) {
     <section className="space-y-4">
       <div className="flex items-center gap-2">
         <IconUsers aria-hidden={true} className="text-primary size-5" />
-        <h2 className="font-display text-xl tracking-tight">
+        <h2 className="font-display text-2xl tracking-tight sm:text-[1.75rem]">
           <Trans>Cast</Trans>
         </h2>
       </div>
@@ -77,7 +77,7 @@ export function CastCarousel({ actors, titleType }: CastCarouselProps) {
                     <div className="w-full text-center">
                       <p className="truncate text-xs font-medium">{member.name}</p>
                       {member.character && (
-                        <p className="text-muted-foreground truncate text-[10px]">
+                        <p className="text-muted-foreground truncate text-[0.6875rem]">
                           {member.character}
                         </p>
                       )}

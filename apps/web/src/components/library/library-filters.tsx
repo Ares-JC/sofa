@@ -306,7 +306,7 @@ export function LibraryFilters({
           onCheckedChange={(checked) => onFilterChange("onMyServices", checked || undefined)}
           aria-label={t`On my services`}
         />
-        <span className="text-muted-foreground text-[11px]">{t`On my services`}</span>
+        <span className="text-muted-foreground text-xs">{t`On my services`}</span>
       </label>
 
       {/* Clear */}

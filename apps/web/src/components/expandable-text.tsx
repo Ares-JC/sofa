@@ -47,7 +47,7 @@ export function ExpandableText({
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="text-primary hover:text-primary/80 mt-1 text-xs font-medium transition-colors"
+          className="text-primary hover:text-primary/80 mt-1.5 text-sm font-medium transition-colors"
         >
           {expanded ? <Trans>Show less</Trans> : <Trans>Read more</Trans>}
         </button>

@@ -65,7 +65,7 @@ export function TitleRow({
     <section className="space-y-4">
       <div className="flex items-center gap-2">
         {icon}
-        <h2 className="font-display text-xl tracking-tight text-balance">{heading}</h2>
+        <h2 className="font-display text-2xl tracking-tight sm:text-[1.75rem] text-balance">{heading}</h2>
       </div>
       <ScrollArea scrollFade hideScrollbar className="-mx-6 sm:-mx-2" scrollRef={scrollRef}>
         <div className="flex gap-4 px-6 py-2 sm:px-2">

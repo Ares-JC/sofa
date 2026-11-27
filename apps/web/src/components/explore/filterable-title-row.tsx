@@ -124,7 +124,7 @@ export function FilterableTitleRow({
     <section className="space-y-4">
       <div className="flex items-center gap-2">
         {icon}
-        <h2 className="font-display text-xl tracking-tight text-balance">{heading}</h2>
+        <h2 className="font-display text-2xl tracking-tight sm:text-[1.75rem] text-balance">{heading}</h2>
       </div>
 
       {/* Genre chips */}

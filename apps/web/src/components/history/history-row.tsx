@@ -51,9 +51,9 @@ export function HistoryRow({ item }: { item: WatchHistoryItem }) {
       <Link
         to="/titles/$id"
         params={{ id: item.title.id }}
-        className="group bg-card/40 hover:bg-card/60 hover:ring-primary/25 flex items-center gap-4 rounded-xl p-3 pe-12 ring-1 ring-white/[0.06] transition-[background,ring-color] duration-200"
+        className="group bg-card/40 hover:bg-card/60 hover:ring-primary/25 flex items-center gap-5 rounded-2xl p-3.5 pe-14 ring-1 ring-white/[0.06] transition-[background,ring-color] duration-200"
       >
-        <div className="relative h-[66px] w-11 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/[0.06]">
+        <div className="relative aspect-[2/3] w-14 shrink-0 overflow-hidden rounded-lg shadow-md ring-1 ring-white/[0.08]">
           {item.title.posterPath ? (
             <img
               src={item.title.posterPath}
@@ -75,14 +75,14 @@ export function HistoryRow({ item }: { item: WatchHistoryItem }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium">{item.title.title}</div>
+          <div className="truncate text-base font-medium">{item.title.title}</div>
           {subtitle && (
-            <div className="text-muted-foreground mt-1 truncate text-xs">{subtitle}</div>
+            <div className="text-muted-foreground mt-1 truncate text-sm">{subtitle}</div>
           )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-muted-foreground text-xs tabular-nums">{time}</span>
-          <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wider uppercase">
+          <span className="text-muted-foreground text-sm tabular-nums">{time}</span>
+          <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[0.6875rem] font-medium tracking-wider uppercase">
             {sourceLabels[item.source]}
           </span>
         </div>

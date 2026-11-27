@@ -352,10 +352,10 @@ export function AccountSection({
             />
           </div>
           <div className="min-w-0 flex-1 space-y-0.5">
-            <p className="text-[13px] leading-none font-medium">
+            <p className="text-sm leading-none font-medium">
               <Trans>Export</Trans>
             </p>
-            <p className="text-muted-foreground text-[11px]">
+            <p className="text-muted-foreground text-xs">
               <Trans>Download your library, watch history, and ratings as JSON</Trans>
             </p>
           </div>
@@ -470,10 +470,10 @@ function SofaImportDialog() {
           )}
         </div>
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="text-[13px] leading-none font-medium">
+          <p className="text-sm leading-none font-medium">
             {isParsing ? <Trans>Parsing file...</Trans> : <Trans>Import</Trans>}
           </p>
-          <p className="text-muted-foreground text-[11px]">
+          <p className="text-muted-foreground text-xs">
             <Trans>Restore from a Sofa export file</Trans>
           </p>
         </div>

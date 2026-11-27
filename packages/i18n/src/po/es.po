@@ -4247,3 +4247,27 @@ msgstr "Mantén presionado hasta que se llene el círculo"
 #: apps/web/src/components/explore/discover-section.tsx
 msgid "That's everything for these filters."
 msgstr "Eso es todo para estos filtros."
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Text size"
+msgstr "Tamaño del texto"
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Small"
+msgstr "Pequeño"
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Normal"
+msgstr "Normal"
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Large"
+msgstr "Grande"
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Extra large"
+msgstr "Muy grande"
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Makes everything bigger or smaller in this browser only."
+msgstr "Agranda o achica todo, solo en este navegador."

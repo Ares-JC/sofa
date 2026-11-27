@@ -137,7 +137,7 @@ export function LogWatchDialog({
       )}
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent>
-          <form onSubmit={handleSubmit} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-6">
             <DialogHeader>
               <DialogTitle>{t`Log a watch`}</DialogTitle>
               <DialogDescription>
@@ -146,8 +146,8 @@ export function LogWatchDialog({
                   : t`Record when you watched this.`}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-3">
-              <div className="grid gap-1.5">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
                 <Label htmlFor={`${fieldId}-date`}>{t`Date`}</Label>
                 <Input
                   id={`${fieldId}-date`}
@@ -156,20 +156,22 @@ export function LogWatchDialog({
                   value={date}
                   max={todayLocal()}
                   onChange={(e) => setDate(e.target.value)}
+                  className="h-11 text-base"
                 />
               </div>
-              <div className="grid gap-1.5">
+              <div className="grid gap-2">
                 <Label htmlFor={`${fieldId}-time`}>{t`Time (optional)`}</Label>
                 <Input
                   id={`${fieldId}-time`}
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
+                  className="h-11 text-base"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={isPending || !date}>
+              <Button type="submit" size="lg" className="px-6" disabled={isPending || !date}>
                 {t`Log watch`}
               </Button>
             </DialogFooter>

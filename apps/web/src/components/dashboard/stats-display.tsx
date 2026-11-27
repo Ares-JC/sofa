@@ -18,12 +18,12 @@ import { Sparkline } from "./sparkline";
 
 function StatCardSkeleton() {
   return (
-    <div className="border-border/30 bg-card/50 overflow-hidden rounded-xl border p-4">
+    <div className="border-border/30 bg-card/50 overflow-hidden rounded-2xl border p-5">
       <div className="flex items-center gap-2">
-        <Skeleton className="h-6 w-6 rounded-md" />
+        <Skeleton className="size-8 rounded-lg" />
         <Skeleton className="h-3 w-16" />
       </div>
-      <Skeleton className="mt-2 h-7 w-12" />
+      <Skeleton className="mt-3 h-9 w-16" />
     </div>
   );
 }
@@ -63,21 +63,21 @@ function StatCard({
 }: StatCardProps) {
   return (
     <div
-      className="animate-stagger-item border-border/30 bg-card/50 relative overflow-hidden rounded-xl border p-4"
+      className="animate-stagger-item border-border/30 bg-card/50 relative overflow-hidden rounded-2xl border p-5"
       style={{ "--stagger-index": index } as React.CSSProperties}
     >
       {sparklineData && <Sparkline data={sparklineData} color={color} />}
       <div className="relative z-10 flex items-center gap-2">
-        <div className={`flex h-6 w-6 items-center justify-center rounded-md ${bgColor}`}>
-          <Icon aria-hidden={true} className={`size-[13px] ${color}`} />
+        <div className={`flex size-8 items-center justify-center rounded-lg ${bgColor}`}>
+          <Icon aria-hidden={true} className={`size-4 ${color}`} />
         </div>
-        <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+        <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           {label}
         </span>
       </div>
       <p
         suppressHydrationWarning
-        className={`font-display relative z-10 mt-2 text-2xl tracking-tight tabular-nums ${color} motion-safe:transition-opacity motion-safe:duration-300`}
+        className={`font-display relative z-10 mt-3 text-3xl tracking-tight tabular-nums sm:text-4xl ${color} motion-safe:transition-opacity motion-safe:duration-300`}
       >
         {value}
       </p>

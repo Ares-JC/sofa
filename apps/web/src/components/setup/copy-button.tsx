@@ -18,7 +18,7 @@ export function CopyButton({ code }: { code: string }) {
       variant="ghost"
       size="sm"
       onClick={handleCopy}
-      className="text-muted-foreground text-[11px]"
+      className="text-muted-foreground text-xs"
     >
       {copied ? (
         <>

@@ -230,7 +230,7 @@ export function BackupScheduleSection() {
               <div className="space-y-3">
                 {/* Frequency selector */}
                 <div className="space-y-1.5">
-                  <span className="text-muted-foreground/70 inline-block text-[11px] font-medium tracking-wider uppercase">
+                  <span className="text-muted-foreground/70 inline-block text-xs font-medium tracking-wider uppercase">
                     <Trans>Frequency</Trans>
                   </span>
                   <ButtonGroup>
@@ -263,7 +263,7 @@ export function BackupScheduleSection() {
                       transition={{ duration: 0.15 }}
                       className="overflow-hidden"
                     >
-                      <span className="text-muted-foreground/70 text-[11px] font-medium tracking-wider uppercase">
+                      <span className="text-muted-foreground/70 text-xs font-medium tracking-wider uppercase">
                         <Trans>Day:</Trans>{" "}
                       </span>
                       <Select
@@ -306,7 +306,7 @@ export function BackupScheduleSection() {
                       transition={{ duration: 0.15 }}
                       className="overflow-hidden"
                     >
-                      <span className="text-muted-foreground/70 text-[11px] font-medium tracking-wider uppercase">
+                      <span className="text-muted-foreground/70 text-xs font-medium tracking-wider uppercase">
                         {frequency === "12h" ? (
                           <Trans>Starting at</Trans>
                         ) : (

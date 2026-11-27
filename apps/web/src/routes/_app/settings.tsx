@@ -24,6 +24,7 @@ import { RegistrationSection } from "@/components/settings/registration-section"
 import { SettingsShell } from "@/components/settings/settings-shell";
 import { StreamingServicesSection } from "@/components/settings/streaming-services-section";
 import { SystemHealthCards } from "@/components/settings/system-health-section";
+import { TextSizeSection } from "@/components/settings/text-size-section";
 import { UpdateCheckSection } from "@/components/settings/update-check-section";
 import { TmdbLogo } from "@/components/tmdb-logo";
 import { Card } from "@/components/ui/card";
@@ -100,6 +101,7 @@ function SettingsPage() {
           />
           <StreamingServicesSection />
           <LanguageSection />
+          <TextSizeSection />
         </div>
       </div>
 
@@ -133,7 +135,7 @@ function SettingsPage() {
             <h2 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               <Trans>Server</Trans>
             </h2>
-            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[10px] font-medium">
+            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium">
               <Trans>Admin only</Trans>
             </span>
           </div>
@@ -149,7 +151,7 @@ function SettingsPage() {
             <h2 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               <Trans>Security</Trans>
             </h2>
-            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[10px] font-medium">
+            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium">
               <Trans>Admin only</Trans>
             </span>
           </div>
@@ -175,7 +177,7 @@ function SettingsPage() {
             <h2 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               <Trans>Backups</Trans>
             </h2>
-            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[10px] font-medium">
+            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium">
               <Trans>Admin only</Trans>
             </span>
           </div>
@@ -201,7 +203,7 @@ function SettingsPage() {
             <h2 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               <Trans>Danger Zone</Trans>
             </h2>
-            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[10px] font-medium">
+            <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium">
               <Trans>Admin only</Trans>
             </span>
           </div>
@@ -247,7 +249,7 @@ function SettingsPage() {
           >
             <TmdbLogo className="h-3" />
           </a>
-          <p className="text-muted-foreground text-[10px] leading-relaxed">
+          <p className="text-muted-foreground text-[0.6875rem] leading-relaxed">
             <Trans>This product uses the TMDB API but is not endorsed or certified by TMDB.</Trans>
           </p>
         </div>

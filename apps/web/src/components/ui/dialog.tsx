@@ -49,7 +49,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 bg-background ring-foreground/10 data-closed:animate-out data-open:animate-in fixed start-1/2 top-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl p-4 text-xs/relaxed ring-1 duration-100 outline-none sm:max-w-sm rtl:translate-x-1/2",
+          "data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 bg-background ring-foreground/10 data-closed:animate-out data-open:animate-in fixed start-1/2 top-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl p-6 text-sm/relaxed ring-1 shadow-2xl shadow-black/40 duration-100 outline-none sm:max-w-md rtl:translate-x-1/2",
           className,
         )}
         {...props}
@@ -111,7 +111,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-sm font-medium", className)}
+      className={cn("font-display text-xl leading-tight tracking-tight", className)}
       {...props}
     />
   );
@@ -122,7 +122,7 @@ function DialogDescription({ className, ...props }: DialogPrimitive.Description.
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-muted-foreground *:[a]:hover:text-foreground text-xs/relaxed *:[a]:underline *:[a]:underline-offset-3",
+        "text-muted-foreground *:[a]:hover:text-foreground text-sm/relaxed *:[a]:underline *:[a]:underline-offset-3",
         className,
       )}
       {...props}

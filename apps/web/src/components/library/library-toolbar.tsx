@@ -75,7 +75,7 @@ export function LibraryToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-[13px]">
+          <span className="text-muted-foreground text-sm">
             {plural(totalResults, { one: "# result", other: "# results" })}
           </span>
 

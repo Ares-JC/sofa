@@ -4247,3 +4247,27 @@ msgstr ""
 #: apps/web/src/components/explore/discover-section.tsx
 msgid "That's everything for these filters."
 msgstr ""
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Text size"
+msgstr ""
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Small"
+msgstr ""
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Normal"
+msgstr ""
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Large"
+msgstr ""
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Extra large"
+msgstr ""
+
+#: apps/web/src/components/settings/text-size-section.tsx
+msgid "Makes everything bigger or smaller in this browser only."
+msgstr ""
