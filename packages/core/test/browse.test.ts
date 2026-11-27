@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildDiscoverParams,
   clampTotalPages,
+  isAnime,
   sortCollectionParts,
   tmdbSortBy,
   toBrowseItem,
@@ -62,6 +63,7 @@ describe("toBrowseItem", () => {
       releaseDate: "1999-03-31",
       firstAirDate: null,
       voteAverage: 8.2,
+      isAnime: false,
     });
   });
 
@@ -86,6 +88,7 @@ describe("toBrowseItem", () => {
       releaseDate: null,
       firstAirDate: null,
       voteAverage: null,
+      isAnime: false,
     });
   });
 
@@ -168,5 +171,20 @@ describe("sortCollectionParts", () => {
       { title: "Second", releaseDate: "2019-07-02" },
     ]);
     expect(sorted.map((part) => part.title)).toEqual(["First", "Second", "Third", "Announced"]);
+  });
+});
+
+describe("isAnime", () => {
+  test("Japanese animation is anime", () => {
+    expect(isAnime({ genre_ids: [16, 10759], original_language: "ja" })).toBe(true);
+    expect(isAnime({ genre_ids: [16], origin_country: ["JP"] })).toBe(true);
+  });
+
+  test("other animation and Japanese live action are not", () => {
+    expect(isAnime({ genre_ids: [16, 35], original_language: "en", origin_country: ["US"] })).toBe(
+      false,
+    );
+    expect(isAnime({ genre_ids: [18], original_language: "ja" })).toBe(false);
+    expect(isAnime({})).toBe(false);
   });
 });
