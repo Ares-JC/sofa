@@ -1,15 +1,32 @@
-import type { useRouter } from "@tanstack/react-router";
-
-/** Search param that opens a title in the phone sheet on top of the current page. */
-export const SHEET_PARAM = "title";
+/**
+ * Phones open titles in a sheet over the current page (like the mobile app). The open title
+ * lives in this small store rather than the URL, so opening it never navigates and the page
+ * behind stays exactly as it was.
+ */
 const PHONE_QUERY = "(max-width: 767px)";
 
-/**
- * Open a title on phones as a sheet over the current page (like the mobile app) instead of
- * navigating away from it. Returns false when the regular page should open instead.
- */
+let openId: string | null = null;
+const listeners = new Set<() => void>();
+
+export function subscribeTitleSheet(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function getTitleSheetId() {
+  return openId;
+}
+
+export function setTitleSheetId(id: string | null) {
+  if (openId === id) return;
+  openId = id;
+  for (const listener of listeners) listener();
+}
+
+/** Open a title in the phone sheet. Returns false when the regular page should open instead. */
 export function openTitleSheet(
-  router: ReturnType<typeof useRouter>,
   id: string,
   event?: { metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; button?: number },
 ): boolean {
@@ -17,12 +34,6 @@ export function openTitleSheet(
   if (event && (event.metaKey || event.ctrlKey || event.shiftKey || (event.button ?? 0) !== 0)) {
     return false;
   }
-  const { pathname, search } = router.state.location;
-  void router.navigate({
-    to: pathname,
-    search: { ...(search as Record<string, unknown>), [SHEET_PARAM]: id },
-    // Keep the page behind where it was
-    resetScroll: false,
-  } as never);
+  setTitleSheetId(id);
   return true;
 }

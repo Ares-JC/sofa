@@ -1,28 +1,47 @@
 import { useLingui } from "@lingui/react/macro";
 import { IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useCanGoBack, useRouter, useRouterState } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Component,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 
 import { TitleDetailContent } from "@/components/titles/title-detail-content";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { orpc } from "@/lib/orpc/client";
-import { SHEET_PARAM } from "@/lib/title-sheet";
+import { getTitleSheetId, setTitleSheetId, subscribeTitleSheet } from "@/lib/title-sheet";
 
-/** Renders the title sheet when the URL asks for one (phones only). Mount once in the layout. */
+/** Renders the phone title sheet while one is open. Mount once in the layout. */
 export function TitleSheetHost() {
   const isMobile = useIsMobile();
-  const id = useRouterState({
-    select: (s) => {
-      const value = (s.location.search as Record<string, unknown>)[SHEET_PARAM];
-      return typeof value === "string" ? value : null;
-    },
-  });
+  const id = useSyncExternalStore(subscribeTitleSheet, getTitleSheetId, () => null);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Leaving the page (a link inside the sheet, the browser's back gesture…) closes it
+  const lastPathname = useRef(pathname);
+  useEffect(() => {
+    if (lastPathname.current !== pathname) {
+      lastPathname.current = pathname;
+      setTitleSheetId(null);
+    }
+  }, [pathname]);
+
   if (!isMobile || !id) return null;
-  return createPortal(<TitleSheet id={id} />, document.body);
+  return createPortal(
+    <SheetErrorBoundary id={id}>
+      <TitleSheet id={id} />
+    </SheetErrorBoundary>,
+    document.body,
+  );
 }
 
 const OPEN_SPRING = { type: "spring", damping: 34, stiffness: 320, mass: 0.9 } as const;
@@ -30,8 +49,6 @@ const CLOSE_TWEEN = { duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const;
 
 function TitleSheet({ id }: { id: string }) {
   const { t } = useLingui();
-  const router = useRouter();
-  const canGoBack = useCanGoBack();
   const reduceMotion = useReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [closing, setClosing] = useState(false);
@@ -61,20 +78,7 @@ function TitleSheet({ id }: { id: string }) {
     };
   }, []);
 
-  const leave = useCallback(() => {
-    if (canGoBack) router.history.back();
-    else {
-      const { pathname, search } = router.state.location;
-      const rest = { ...(search as Record<string, unknown>) };
-      delete rest[SHEET_PARAM];
-      void router.navigate({
-        to: pathname,
-        search: rest,
-        replace: true,
-        resetScroll: false,
-      } as never);
-    }
-  }, [canGoBack, router]);
+  const leave = useCallback(() => setTitleSheetId(null), []);
 
   const close = useCallback(() => {
     if (closing) return;
@@ -214,4 +218,23 @@ function SheetSkeleton() {
       </div>
     </div>
   );
+}
+
+/** If the sheet ever fails to render, open the regular title page instead of breaking the app. */
+class SheetErrorBoundary extends Component<{ id: string; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    const { id } = this.props;
+    setTitleSheetId(null);
+    window.location.assign(`/titles/${encodeURIComponent(id)}`);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }

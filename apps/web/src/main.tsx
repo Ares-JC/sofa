@@ -11,7 +11,10 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultPreloadStaleTime: 60_000,
-  defaultPendingMs: 0,
+  // Show loading skeletons only when a page actually takes a moment; pages with cached data
+  // (most of them) then switch instantly instead of flashing a skeleton for half a second.
+  defaultPendingMs: 200,
+  defaultPendingMinMs: 300,
   scrollRestoration: true,
   context: { orpc, queryClient },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
