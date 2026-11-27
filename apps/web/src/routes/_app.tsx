@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { CommandPalette } from "@/components/command-palette";
 import { MobileTabBar, NavBar } from "@/components/nav-bar";
@@ -6,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateToast } from "@/components/update-toast";
 import { loadSession } from "@/lib/auth/client";
 import { client } from "@/lib/orpc/client";
+import { capturePageSnapshot } from "@/lib/page-snapshot";
 
 const UPDATE_CHECK_REUSE_MS = 10 * 60_000;
 let cachedUpdateCheck: {
@@ -41,6 +43,16 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const { session, updateCheck } = Route.useRouteContext();
+  const router = useRouter();
+
+  // Phones: keep a copy of the current page to show behind a title sheet
+  useEffect(
+    () =>
+      router.subscribe("onBeforeNavigate", (event) => {
+        if (event.toLocation.pathname.startsWith("/titles/")) capturePageSnapshot();
+      }),
+    [router],
+  );
   return (
     <>
       <div className="relative z-0 min-h-screen overflow-x-clip pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
