@@ -11,8 +11,9 @@ import { getThemeCssProperties } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app/titles/$id")({
   staleTime: 60_000,
-  // Wait a moment for the data so the sheet slides up already filled, not as a skeleton
-  pendingMs: 700,
+  // Keep showing the current page (or title) while the next one loads, instead of swapping in a
+  // full-page skeleton, which would close the phone sheet and open it again
+  pendingMs: 3000,
   loader: async ({ params, context }) => {
     try {
       const [titleResult, userInfo] = await Promise.all([

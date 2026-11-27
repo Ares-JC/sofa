@@ -180,3 +180,8 @@
     animation: none;
   }
 }
+
+/* Phones: coming back to a list from a title sheet shows it at once, without the fade-in */
+html[data-sheet-return] .animate-stagger-item {
+  animation: none;
+}

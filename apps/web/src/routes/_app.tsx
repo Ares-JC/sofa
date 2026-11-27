@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateToast } from "@/components/update-toast";
 import { loadSession } from "@/lib/auth/client";
 import { client } from "@/lib/orpc/client";
-import { capturePageSnapshot } from "@/lib/page-snapshot";
+import { trackSheetOrigin } from "@/lib/sheet-origin";
 
 const UPDATE_CHECK_REUSE_MS = 10 * 60_000;
 let cachedUpdateCheck: {
@@ -45,11 +45,11 @@ function AppLayout() {
   const { session, updateCheck } = Route.useRouteContext();
   const router = useRouter();
 
-  // Phones: keep a copy of the current page to show behind a title sheet
+  // Phones: remember the list a title sheet was opened from, so closing returns there
   useEffect(
     () =>
       router.subscribe("onBeforeNavigate", (event) => {
-        if (event.toLocation.pathname.startsWith("/titles/")) capturePageSnapshot();
+        trackSheetOrigin(event.fromLocation, event.toLocation);
       }),
     [router],
   );

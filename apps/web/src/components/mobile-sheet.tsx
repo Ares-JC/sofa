@@ -6,7 +6,7 @@ import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, use
 import { createPortal } from "react-dom";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { mountPageSnapshot } from "@/lib/page-snapshot";
+import { stepsBackToOrigin } from "@/lib/sheet-origin";
 
 /**
  * On phones, show a page as an iOS-style sheet: it slides up from the bottom with rounded top
@@ -53,12 +53,6 @@ function Sheet({
   const dragRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  const behindRef = useRef<HTMLDivElement>(null);
-
-  // Show the page you came from behind the sheet (a still copy; the real one returns on close)
-  useEffect(() => {
-    if (behindRef.current) mountPageSnapshot(behindRef.current);
-  }, []);
 
   // The page behind the sheet shouldn't scroll while it's open.
   useEffect(() => {
@@ -73,8 +67,17 @@ function Sheet({
     scrollRef.current?.scrollTo({ top: 0 });
   }, [resetKey]);
 
+  const leftRef = useRef(false);
   const leave = useCallback(() => {
-    if (canGoBack) router.history.back();
+    if (leftRef.current) return;
+    leftRef.current = true;
+    // The list shows up at once instead of fading its cards in again
+    document.documentElement.setAttribute("data-sheet-return", "");
+    setTimeout(() => document.documentElement.removeAttribute("data-sheet-return"), 1500);
+    // Back to the list the first title was opened from, skipping titles opened inside the sheet
+    const steps = stepsBackToOrigin(router.history.location);
+    if (steps) router.history.go(-steps);
+    else if (canGoBack) router.history.back();
     else void router.navigate({ to: "/dashboard" });
   }, [canGoBack, router]);
 
@@ -157,7 +160,6 @@ function Sheet({
 
   return (
     <div className={`fixed inset-0 z-50 ${closing ? "pointer-events-none" : ""}`} style={style}>
-      <div ref={behindRef} aria-hidden={true} className="absolute inset-0 overflow-hidden" />
       <div ref={backdropRef} className="absolute inset-0">
         <motion.div
           aria-hidden={true}
