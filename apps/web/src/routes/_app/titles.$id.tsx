@@ -2,6 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { BackButton } from "@/components/back-button";
+import { MobileSheet } from "@/components/mobile-sheet";
 import { TitleActions } from "@/components/titles/title-actions";
 import { TitleAvailability } from "@/components/titles/title-availability";
 import { TitleCast } from "@/components/titles/title-cast";
@@ -56,9 +57,11 @@ function TitleDetailPage() {
   const themeStyle = getThemeCssProperties(title.colorPalette);
 
   return (
+    // Phones: the page opens as a sheet from the bottom, with its own close button
+    <MobileSheet style={themeStyle}>
     <div className="relative space-y-6" style={themeStyle}>
       <TitleTheme style={themeStyle as Record<string, string>} />
-      <BackButton className="absolute start-0 top-0 z-20" />
+      <BackButton className="absolute start-0 top-0 z-20 max-md:hidden" />
       <TitleProvider
         key={title.id}
         titleId={title.id}
@@ -79,6 +82,7 @@ function TitleDetailPage() {
 
       <TitleRecommendations titleId={title.id} />
     </div>
+    </MobileSheet>
   );
 }
 
