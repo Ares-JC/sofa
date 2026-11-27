@@ -1,7 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 import { CommandPalette } from "@/components/command-palette";
-import { TitleSheetHost } from "@/components/mobile-sheet";
 import { MobileTabBar, NavBar } from "@/components/nav-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateToast } from "@/components/update-toast";
@@ -61,8 +60,6 @@ function AppLayout() {
         </main>
       </div>
       <MobileTabBar />
-      {/* Phones: titles open as a sheet over the current page */}
-      <TitleSheetHost />
       <CommandPalette />
       {session.user.role === "admin" && <UpdateToast data={updateCheck} />}
     </>

@@ -1,88 +1,59 @@
 import { useLingui } from "@lingui/react/macro";
 import { IconX } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
-import { useRouterState } from "@tanstack/react-router";
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import {
-  Component,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCanGoBack, useRouter } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "motion/react";
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { TitleDetailContent } from "@/components/titles/title-detail-content";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { orpc } from "@/lib/orpc/client";
-import {
-  getTitleSheetId,
-  markTitleSheetShown,
-  setTitleSheetId,
-  subscribeTitleSheet,
-} from "@/lib/title-sheet";
 
-/** Renders the phone title sheet while one is open. Mount once in the layout. */
-export function TitleSheetHost() {
+/**
+ * On phones, show a page as an iOS-style sheet: it slides up from the bottom with rounded top
+ * corners and a round close button, can be pulled down to close, and slides back down when
+ * closed (like the mobile app). On larger screens the page renders normally.
+ */
+export function MobileSheet({
+  children,
+  style,
+  resetKey,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  /** When this changes (another title opened inside the sheet), scroll back to the top. */
+  resetKey?: string;
+}) {
   const isMobile = useIsMobile();
-  const id = useSyncExternalStore(subscribeTitleSheet, getTitleSheetId, () => null);
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-
-  // Leaving the page (a link inside the sheet, the browser's back gesture…) closes it
-  const lastPathname = useRef(pathname);
-  useEffect(() => {
-    if (lastPathname.current !== pathname) {
-      lastPathname.current = pathname;
-      setTitleSheetId(null);
-    }
-  }, [pathname]);
-
-  if (!isMobile || !id) return null;
+  if (!isMobile) return <>{children}</>;
   return createPortal(
-    <SheetErrorBoundary id={id}>
-      <TitleSheet id={id} />
-    </SheetErrorBoundary>,
+    <Sheet style={style} resetKey={resetKey}>
+      {children}
+    </Sheet>,
     document.body,
   );
 }
 
-const OPEN_SPRING = { type: "spring", damping: 34, stiffness: 320, mass: 0.9 } as const;
-const CLOSE_TWEEN = { duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const;
+const CLOSE_DISTANCE = 140;
+const CLOSE_SPEED = 900;
 
-function TitleSheet({ id }: { id: string }) {
+function Sheet({
+  children,
+  style,
+  resetKey,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  resetKey?: string;
+}) {
   const { t } = useLingui();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
   const reduceMotion = useReducedMotion();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [closing, setClosing] = useState(false);
+  const dragRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
-  const offscreen = typeof window === "undefined" ? 900 : window.innerHeight;
-  const y = useMotionValue(0);
-  // The page behind shows through more as the sheet is pulled down
-  const backdropOpacity = useTransform(y, [0, offscreen], [1, 0]);
-
-  const { data, isError } = useQuery(orpc.titles.get.queryOptions({ input: { id } }));
-
-  useEffect(() => {
-    markTitleSheetShown(id);
-  }, [id]);
-
-  // Safety net: if the opening animation never ran (e.g. reduced motion), show the sheet anyway
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (y.get() > offscreen * 0.5) y.set(0);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [y, offscreen]);
-
-  // Another title opened from inside the sheet: start at its top
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 0 });
-  }, [id]);
-
-  // Keep the page behind from scrolling while the sheet is open
+  // The page behind the sheet shouldn't scroll while it's open.
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -91,23 +62,55 @@ function TitleSheet({ id }: { id: string }) {
     };
   }, []);
 
-  const leave = useCallback(() => setTitleSheetId(null), []);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [resetKey]);
+
+  const leave = useCallback(() => {
+    if (canGoBack) router.history.back();
+    else void router.navigate({ to: "/dashboard" });
+  }, [canGoBack, router]);
 
   const close = useCallback(() => {
-    if (closing) return;
-    setClosing(true);
     if (reduceMotion) leave();
-    else void animate(y, offscreen, CLOSE_TWEEN).then(leave);
-  }, [closing, reduceMotion, leave, y, offscreen]);
+    else setClosing(true);
+  }, [reduceMotion, leave]);
 
-  // Pull down from the top of the sheet to close it (like iOS)
+  // Safety net: if the closing animation never finishes, still leave.
+  useEffect(() => {
+    if (!closing) return;
+    const timer = setTimeout(leave, 600);
+    return () => clearTimeout(timer);
+  }, [closing, leave]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.querySelector("[role=dialog]:not([data-mobile-sheet])")) {
+        close();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [close]);
+
+  // Pull down from the top of the sheet to close it (like iOS). Moves a wrapper with plain
+  // transforms so it never fights the slide-up animation.
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    const wrapper = dragRef.current;
+    if (!el || !wrapper) return;
     let startY = 0;
     let startTime = 0;
     let distance = 0;
     let dragging = false;
+
+    const setOffset = (px: number, animated: boolean) => {
+      wrapper.style.transition = animated ? "transform 0.3s cubic-bezier(0.32,0.72,0,1)" : "";
+      wrapper.style.transform = px ? `translateY(${px}px)` : "";
+      if (backdropRef.current) {
+        backdropRef.current.style.opacity = String(Math.max(0, 1 - px / window.innerHeight));
+      }
+    };
 
     const onStart = (e: TouchEvent) => {
       startY = e.touches[0]?.clientY ?? 0;
@@ -123,14 +126,14 @@ function TitleSheet({ id }: { id: string }) {
       }
       e.preventDefault();
       distance = Math.max(0, dy);
-      y.set(distance);
+      setOffset(distance, false);
     };
     const onEnd = () => {
       if (!dragging) return;
       dragging = false;
       const speed = (distance / Math.max(1, performance.now() - startTime)) * 1000;
-      if (distance > 140 || speed > 900) close();
-      else void animate(y, 0, { type: "spring", damping: 30, stiffness: 380 });
+      if (distance > CLOSE_DISTANCE || speed > CLOSE_SPEED) close();
+      else setOffset(0, true);
     };
 
     el.addEventListener("touchstart", onStart, { passive: true });
@@ -143,115 +146,60 @@ function TitleSheet({ id }: { id: string }) {
       el.removeEventListener("touchend", onEnd);
       el.removeEventListener("touchcancel", onEnd);
     };
-  }, [y, close]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !document.querySelector("[role=dialog]:not([data-title-sheet])")) {
-        close();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
   return (
-    // While closing, let taps reach the page behind right away
-    <div className={`fixed inset-0 z-50 ${closing ? "pointer-events-none" : ""}`}>
-      <motion.div
-        aria-hidden={true}
-        className="absolute inset-0 bg-black/55"
-        style={{ opacity: backdropOpacity }}
-        onClick={close}
-      />
-      <motion.div
-        ref={scrollRef}
-        role="dialog"
-        aria-modal={true}
-        data-title-sheet=""
-        style={{ y }}
-        // Slide up when opening (declarative, so it also runs with reduced motion settings)
-        initial={reduceMotion ? false : { y: offscreen }}
-        animate={{ y: 0 }}
-        transition={OPEN_SPRING}
-        className="bg-background absolute inset-x-0 top-[calc(env(safe-area-inset-top)+0.5rem)] bottom-0 overflow-y-auto overscroll-contain rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
+    <div className={`fixed inset-0 z-50 ${closing ? "pointer-events-none" : ""}`} style={style}>
+      <div ref={backdropRef} className="absolute inset-0">
+        <motion.div
+          aria-hidden={true}
+          className="absolute inset-0 bg-black/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: closing ? 0 : 1 }}
+          transition={{ duration: 0.25 }}
+          onClick={close}
+        />
+      </div>
+      <div
+        ref={dragRef}
+        className="absolute inset-x-0 top-[calc(env(safe-area-inset-top)+0.5rem)] bottom-0"
       >
-        {/* Grab handle + close button float over the content while scrolling */}
-        <div className="pointer-events-none sticky top-0 z-30 h-0">
-          <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-white/40" />
-          <div className="absolute end-3 top-3">
-            <button
-              type="button"
-              onClick={close}
-              aria-label={t`Close`}
-              className="pointer-events-auto flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white shadow-lg backdrop-blur-md transition-transform active:scale-90"
-            >
-              <IconX aria-hidden={true} className="size-5" />
-            </button>
+        <motion.div
+          ref={scrollRef}
+          role="dialog"
+          aria-modal={true}
+          data-mobile-sheet=""
+          className="bg-background h-full overflow-y-auto overscroll-contain rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
+          initial={reduceMotion ? false : { y: "100%" }}
+          animate={{ y: closing ? "100%" : 0 }}
+          transition={
+            closing
+              ? { duration: 0.28, ease: [0.32, 0.72, 0, 1] }
+              : { type: "spring", damping: 34, stiffness: 320, mass: 0.9 }
+          }
+          onAnimationComplete={() => {
+            if (closing) leave();
+          }}
+        >
+          {/* Grab handle + close button float over the content while scrolling */}
+          <div className="pointer-events-none sticky top-0 z-30 h-0">
+            <div className="mx-auto mt-2 h-1.5 w-10 rounded-full bg-white/40" />
+            <div className="absolute end-3 top-3">
+              <button
+                type="button"
+                onClick={close}
+                aria-label={t`Close`}
+                className="pointer-events-auto flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white shadow-lg backdrop-blur-md transition-transform active:scale-90"
+              >
+                <IconX aria-hidden={true} className="size-5" />
+              </button>
+            </div>
           </div>
-        </div>
-        <SheetBody>
-          {data ? (
-            <TitleDetailContent data={data} shortcuts={false} />
-          ) : isError ? (
-            <p className="text-muted-foreground py-24 text-center text-sm">
-              {t`Something went wrong while loading this title. Please try again.`}
-            </p>
-          ) : (
-            <SheetSkeleton />
-          )}
-        </SheetBody>
-      </motion.div>
-    </div>
-  );
-}
-
-function SheetBody({ children }: { children: ReactNode }) {
-  return (
-    <div className="relative px-4 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
-      {children}
-    </div>
-  );
-}
-
-function SheetSkeleton() {
-  return (
-    <div className="space-y-5">
-      <Skeleton className="-mt-6 mr-[calc(-50vw+50%)] ml-[calc(-50vw+50%)] h-80 rounded-none" />
-      <div className="-mt-36 flex items-end gap-4 px-0">
-        <Skeleton className="aspect-[2/3] w-[112px] shrink-0 rounded-xl" />
-        <div className="flex-1 space-y-2 pb-1">
-          <Skeleton className="h-7 w-4/5" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-      </div>
-      <div className="flex gap-3">
-        <Skeleton className="h-10 w-32 rounded-lg" />
-        <Skeleton className="h-10 w-40 rounded-lg" />
-      </div>
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
+          <div className="relative px-4 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            {children}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
-}
-
-/** If the sheet ever fails to render, open the regular title page instead of breaking the app. */
-class SheetErrorBoundary extends Component<{ id: string; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  componentDidCatch() {
-    const { id } = this.props;
-    setTitleSheetId(null);
-    window.location.assign(`/titles/${encodeURIComponent(id)}`);
-  }
-
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
 }
