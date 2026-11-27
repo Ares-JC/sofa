@@ -163,6 +163,8 @@ function LibraryPage() {
     hasNextPage,
     isFetchingNextPage,
     isFetchNextPageError,
+    // Load the next page about two rows ahead so scrolling never hits an empty gap.
+    rootMargin: "1500px",
   });
 
   const items = data?.pages.flatMap((p) => p.items) ?? [];
