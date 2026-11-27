@@ -73,7 +73,7 @@ export function TitleRow({
             <div key={item.id} className="w-[150px] shrink-0 sm:w-[180px] lg:w-[210px]">
               <div
                 className="animate-stagger-item"
-                style={{ "--stagger-index": i } as React.CSSProperties}
+                style={{ "--stagger-index": i % 20 } as React.CSSProperties}
               >
                 <TitleCard
                   id={item.id}

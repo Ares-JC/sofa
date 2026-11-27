@@ -115,7 +115,7 @@ export function FilmographyGrid({ credits, userStatuses }: FilmographyGridProps)
           <div
             key={credit.titleId}
             className="animate-stagger-item"
-            style={{ "--stagger-index": i } as React.CSSProperties}
+            style={{ "--stagger-index": i % 20 } as React.CSSProperties}
           >
             <TitleCard
               id={credit.titleId}
