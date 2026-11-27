@@ -58,7 +58,7 @@ function ExploreSkeletons() {
           </div>
           <div className="flex gap-4 overflow-hidden">
             {Array.from({ length: 8 }).map((_, j) => (
-              <div key={j} className="w-[140px] shrink-0 sm:w-[160px]">
+              <div key={j} className="w-[150px] shrink-0 sm:w-[180px] lg:w-[210px]">
                 <Skeleton className="aspect-[2/3] w-full rounded-xl" />
               </div>
             ))}

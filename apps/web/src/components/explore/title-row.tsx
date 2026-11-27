@@ -70,7 +70,7 @@ export function TitleRow({
       <ScrollArea scrollFade hideScrollbar className="-mx-6 sm:-mx-2" scrollRef={scrollRef}>
         <div className="flex gap-4 px-6 py-2 sm:px-2">
           {visibleItems.map((item, i) => (
-            <div key={item.id} className="w-[140px] shrink-0 sm:w-[160px]">
+            <div key={item.id} className="w-[150px] shrink-0 sm:w-[180px] lg:w-[210px]">
               <div
                 className="animate-stagger-item"
                 style={{ "--stagger-index": i } as React.CSSProperties}

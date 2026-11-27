@@ -151,7 +151,7 @@ export function FilterableTitleRow({
       {isLoading && (
         <div className="-mx-4 flex gap-4 overflow-hidden px-4 sm:-mx-0 sm:px-0">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={`skel-${i}`} className="w-[140px] shrink-0 sm:w-[160px]">
+            <div key={`skel-${i}`} className="w-[150px] shrink-0 sm:w-[180px] lg:w-[210px]">
               <TitleCardSkeleton />
             </div>
           ))}
@@ -176,7 +176,7 @@ export function FilterableTitleRow({
         >
           <div className="flex gap-4 px-6 py-2 sm:px-2">
             {visibleItems.map((item: TitleRowItem, i: number) => (
-              <div key={item.id} className="w-[140px] shrink-0 sm:w-[160px]">
+              <div key={item.id} className="w-[150px] shrink-0 sm:w-[180px] lg:w-[210px]">
                 <div
                   className="animate-stagger-item"
                   style={{ "--stagger-index": i } as React.CSSProperties}
