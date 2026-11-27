@@ -18,7 +18,12 @@ import { TitleDetailContent } from "@/components/titles/title-detail-content";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { orpc } from "@/lib/orpc/client";
-import { getTitleSheetId, setTitleSheetId, subscribeTitleSheet } from "@/lib/title-sheet";
+import {
+  getTitleSheetId,
+  markTitleSheetShown,
+  setTitleSheetId,
+  subscribeTitleSheet,
+} from "@/lib/title-sheet";
 
 /** Renders the phone title sheet while one is open. Mount once in the layout. */
 export function TitleSheetHost() {
@@ -54,15 +59,23 @@ function TitleSheet({ id }: { id: string }) {
   const [closing, setClosing] = useState(false);
 
   const offscreen = typeof window === "undefined" ? 900 : window.innerHeight;
-  const y = useMotionValue(reduceMotion ? 0 : offscreen);
+  const y = useMotionValue(0);
   // The page behind shows through more as the sheet is pulled down
   const backdropOpacity = useTransform(y, [0, offscreen], [1, 0]);
 
   const { data, isError } = useQuery(orpc.titles.get.queryOptions({ input: { id } }));
 
   useEffect(() => {
-    if (!reduceMotion) void animate(y, 0, OPEN_SPRING);
-  }, [y, reduceMotion]);
+    markTitleSheetShown(id);
+  }, [id]);
+
+  // Safety net: if the opening animation never ran (e.g. reduced motion), show the sheet anyway
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (y.get() > offscreen * 0.5) y.set(0);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [y, offscreen]);
 
   // Another title opened from inside the sheet: start at its top
   useEffect(() => {
@@ -157,6 +170,10 @@ function TitleSheet({ id }: { id: string }) {
         aria-modal={true}
         data-title-sheet=""
         style={{ y }}
+        // Slide up when opening (declarative, so it also runs with reduced motion settings)
+        initial={reduceMotion ? false : { y: offscreen }}
+        animate={{ y: 0 }}
+        transition={OPEN_SPRING}
         className="bg-background absolute inset-x-0 top-[calc(env(safe-area-inset-top)+0.5rem)] bottom-0 overflow-y-auto overscroll-contain rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
       >
         {/* Grab handle + close button float over the content while scrolling */}

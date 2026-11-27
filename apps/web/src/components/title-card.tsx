@@ -12,7 +12,7 @@ import {
   IconStarFilled,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { type MotionStyle, type MotionValue, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -439,6 +439,7 @@ export function TitleCard({
     handlers,
   } = useTiltEffect();
 
+  const navigate = useNavigate();
   const cardContent = (
     <motion.div ref={tiltRef} style={containerStyle} {...handlers}>
       <CardInner
@@ -473,7 +474,11 @@ export function TitleCard({
         params={{ id }}
         onClick={(e) => {
           // Phones: open over the current page as a sheet, like the mobile app
-          if (openTitleSheet(id, e)) e.preventDefault();
+          if (
+            openTitleSheet(id, e, () => void navigate({ to: "/titles/$id", params: { id } }))
+          ) {
+            e.preventDefault();
+          }
         }}
       >
         {cardContent}
