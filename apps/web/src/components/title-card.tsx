@@ -12,7 +12,7 @@ import {
   IconStarFilled,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { type MotionStyle, type MotionValue, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTiltEffect } from "@/hooks/use-tilt-effect";
 import { orpc } from "@/lib/orpc/client";
 import { invalidateTrackingQueries, patchExploreStatus } from "@/lib/orpc/invalidate";
+import { openTitleSheet } from "@/lib/title-sheet";
 import { thumbHashToUrl } from "@/lib/thumbhash";
 
 export function TitleCardSkeleton() {
@@ -438,6 +439,7 @@ export function TitleCard({
     handlers,
   } = useTiltEffect();
 
+  const router = useRouter();
   const cardContent = (
     <motion.div ref={tiltRef} style={containerStyle} {...handlers}>
       <CardInner
@@ -467,7 +469,14 @@ export function TitleCard({
         <HoldToWatchButton id={id} onWatched={() => setWatchedNow(true)} />
       )}
       <QuickAddButton id={id} userStatus={watchedNow ? "completed" : userStatus} />
-      <Link to="/titles/$id" params={{ id }}>
+      <Link
+        to="/titles/$id"
+        params={{ id }}
+        onClick={(e) => {
+          // Phones: open over the current page as a sheet, like the mobile app
+          if (openTitleSheet(router, id, e)) e.preventDefault();
+        }}
+      >
         {cardContent}
       </Link>
     </div>

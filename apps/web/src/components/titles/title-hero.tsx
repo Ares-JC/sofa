@@ -40,7 +40,7 @@ export function TitleHero({
       {/* Backdrop hero */}
       {title.backdropPath && (
         <div
-          className="relative -mt-6 mr-[calc(-50vw+50%)] ml-[calc(-50vw+50%)] h-60 overflow-hidden md:h-[28rem]"
+          className="relative -mt-6 mr-[calc(-50vw+50%)] ml-[calc(-50vw+50%)] h-80 overflow-hidden md:h-[28rem]"
           style={
             title.backdropThumbHash
               ? {
@@ -84,7 +84,7 @@ export function TitleHero({
             }}
           />
           {trailerVideoKey && (
-            <div className="absolute inset-0 z-10 mb-24 flex items-center justify-center md:mb-12">
+            <div className="absolute inset-0 z-10 flex items-center justify-center md:mb-12">
               <TrailerDialog videoKey={trailerVideoKey} variant="backdrop" />
             </div>
           )}
@@ -98,7 +98,7 @@ export function TitleHero({
           buttons, then the synopsis (like the mobile app). Desktop: poster on the left, details
           on the right. */}
       <div
-        className={`flex flex-col gap-5 md:flex-row md:gap-8 ${title.backdropPath ? "relative z-10 -mt-24 md:-mt-32" : ""}`}
+        className={`flex flex-col gap-5 md:flex-row md:gap-8 ${title.backdropPath ? "relative z-10 -mt-36 md:-mt-32" : ""}`}
       >
         <div className="flex items-end gap-4 md:block md:shrink-0 md:self-start">
           {title.posterPath && (

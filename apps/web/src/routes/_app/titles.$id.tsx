@@ -1,21 +1,10 @@
 import { Trans } from "@lingui/react/macro";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
-import { BackButton } from "@/components/back-button";
-import { MobileSheet } from "@/components/mobile-sheet";
-import { TitleActions } from "@/components/titles/title-actions";
-import { TitleAvailability } from "@/components/titles/title-availability";
-import { TitleCast } from "@/components/titles/title-cast";
-import { TitleHero } from "@/components/titles/title-hero";
-import { TitleKeyboardShortcuts } from "@/components/titles/title-keyboard-shortcuts";
-import { TitleProvider } from "@/components/titles/title-provider";
-import { TitleRecommendations } from "@/components/titles/title-recommendations";
-import { TitleSeasons } from "@/components/titles/title-seasons";
-import { TitleTheme } from "@/components/titles/title-theme";
+import { TitleDetailContent } from "@/components/titles/title-detail-content";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAppErrorCode } from "@/lib/error-messages";
 import { orpc } from "@/lib/orpc/client";
-import { getThemeCssProperties } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app/titles/$id")({
   staleTime: 60_000,
@@ -52,38 +41,8 @@ export const Route = createFileRoute("/_app/titles/$id")({
 });
 
 function TitleDetailPage() {
-  const { title, seasons, availability, cast } = Route.useLoaderData();
-
-  const themeStyle = getThemeCssProperties(title.colorPalette);
-
-  return (
-    // Phones: the page opens as a sheet from the bottom, with its own close button
-    <MobileSheet style={themeStyle}>
-    <div className="relative space-y-6" style={themeStyle}>
-      <TitleTheme style={themeStyle as Record<string, string>} />
-      <BackButton className="absolute start-0 top-0 z-20 max-md:hidden" />
-      <TitleProvider
-        key={title.id}
-        titleId={title.id}
-        titleType={title.type}
-        titleName={title.title}
-        seasons={seasons}
-      >
-        <TitleHero title={title} trailerVideoKey={title.trailerVideoKey} actions={<TitleActions />}>
-          <TitleAvailability availability={availability} />
-        </TitleHero>
-
-        {title.type === "tv" && seasons.length > 0 && <TitleSeasons />}
-
-        <TitleCast cast={cast} titleType={title.type} />
-
-        <TitleKeyboardShortcuts />
-      </TitleProvider>
-
-      <TitleRecommendations titleId={title.id} />
-    </div>
-    </MobileSheet>
-  );
+  const data = Route.useLoaderData();
+  return <TitleDetailContent data={data} showBackButton={true} />;
 }
 
 function TitleDetailLoading() {

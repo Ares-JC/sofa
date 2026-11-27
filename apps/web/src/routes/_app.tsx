@@ -1,11 +1,18 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 import { CommandPalette } from "@/components/command-palette";
+import { TitleSheetHost } from "@/components/mobile-sheet";
 import { MobileTabBar, NavBar } from "@/components/nav-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateToast } from "@/components/update-toast";
 import { loadSession } from "@/lib/auth/client";
 import { client } from "@/lib/orpc/client";
+
+const UPDATE_CHECK_REUSE_MS = 10 * 60_000;
+let cachedUpdateCheck: {
+  value: Awaited<ReturnType<typeof client.admin.settings.get>>["updateCheck"];
+  at: number;
+} | null = null;
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
@@ -14,11 +21,17 @@ export const Route = createFileRoute("/_app")({
 
     let updateCheck = null;
     if (session.user.role === "admin") {
-      try {
-        const settings = await client.admin.settings.get();
-        updateCheck = settings.updateCheck;
-      } catch {
-        // Silently ignore — update check is non-critical
+      // Runs on every page change; the update notice doesn't need a request each time.
+      if (cachedUpdateCheck && Date.now() - cachedUpdateCheck.at < UPDATE_CHECK_REUSE_MS) {
+        updateCheck = cachedUpdateCheck.value;
+      } else {
+        try {
+          const settings = await client.admin.settings.get();
+          updateCheck = settings.updateCheck;
+          cachedUpdateCheck = { value: updateCheck, at: Date.now() };
+        } catch {
+          // Silently ignore — update check is non-critical
+        }
       }
     }
     return { session, updateCheck };
@@ -48,6 +61,8 @@ function AppLayout() {
         </main>
       </div>
       <MobileTabBar />
+      {/* Phones: titles open as a sheet over the current page */}
+      <TitleSheetHost />
       <CommandPalette />
       {session.user.role === "admin" && <UpdateToast data={updateCheck} />}
     </>
