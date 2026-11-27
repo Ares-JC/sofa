@@ -2,6 +2,7 @@ import { plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import {
   IconBookmarkFilled,
+  IconCheck,
   IconCircleCheckFilled,
   IconDeviceTv,
   IconLoader,
@@ -13,7 +14,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type MotionStyle, type MotionValue, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -138,6 +139,134 @@ function QuickAddButton({ id, userStatus }: { id: string; userStatus?: TitleStat
         {addToWatchlistMutation.isPending && <IconLoader className="size-4 animate-spin" />}
       </TooltipTrigger>
       <TooltipContent side="bottom">{t`Add to Watchlist`}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** How long the "mark as watched" button must be held, so it can't be triggered by accident. */
+const HOLD_TO_WATCH_MS = 900;
+
+/**
+ * Mark a movie as watched straight from its card. It has to be held down while a ring fills up
+ * (like a loading circle) so a stray click never logs a watch by mistake.
+ */
+function HoldToWatchButton({ id, onWatched }: { id: string; onWatched: () => void }) {
+  const { t } = useLingui();
+  const queryClient = useQueryClient();
+  const [holding, setHolding] = useState(false);
+  const [hint, setHint] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const watchMutation = useMutation(
+    orpc.tracking.watch.mutationOptions({
+      onSuccess: () => {
+        onWatched();
+        toast.success(t`Marked as watched`);
+      },
+      onError: () => toast.error(t`Failed to mark as watched`),
+      onSettled: () => void invalidateTrackingQueries(queryClient),
+    }),
+  );
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  function start() {
+    if (watchMutation.isPending || timer.current) return;
+    setHint(false);
+    setHolding(true);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      setHolding(false);
+      watchMutation.mutate({ scope: "movie", ids: [id] });
+    }, HOLD_TO_WATCH_MS);
+  }
+
+  function cancel(showHint: boolean) {
+    if (!timer.current) return;
+    clearTimeout(timer.current);
+    timer.current = null;
+    setHolding(false);
+    if (showHint) setHint(true);
+  }
+
+  // Ring geometry: a circle drawn just inside the 32px button.
+  const radius = 14;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <Tooltip
+      open={tooltipOpen || hint}
+      onOpenChange={(open) => {
+        setTooltipOpen(open);
+        if (!open) setHint(false);
+      }}
+    >
+      <TooltipTrigger
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          start();
+        }}
+        onPointerUp={() => cancel(true)}
+        onPointerLeave={() => cancel(false)}
+        onPointerCancel={() => cancel(false)}
+        onKeyDown={(e) => {
+          if ((e.key === " " || e.key === "Enter") && !e.repeat) {
+            e.preventDefault();
+            start();
+          }
+        }}
+        onKeyUp={(e) => {
+          if (e.key === " " || e.key === "Enter") cancel(true);
+        }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onContextMenu={(e) => e.preventDefault()}
+        className={`absolute start-2 top-2 z-10 flex size-8 touch-none items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-[opacity,background-color,transform] select-none hover:bg-black/70 focus-visible:opacity-100 sm:group-hover:opacity-100 ${
+          holding ? "scale-110 opacity-100" : "opacity-60 sm:opacity-0"
+        }`}
+        render={<button type="button" aria-label={t`Hold to mark as watched`} />}
+      >
+        <svg
+          aria-hidden={true}
+          viewBox="0 0 32 32"
+          className="pointer-events-none absolute inset-0 size-8 -rotate-90"
+        >
+          <circle
+            cx="16"
+            cy="16"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            className="text-status-completed"
+            strokeDasharray={circumference}
+            strokeDashoffset={holding ? 0 : circumference}
+            style={{
+              transition: holding
+                ? `stroke-dashoffset ${HOLD_TO_WATCH_MS}ms linear`
+                : "stroke-dashoffset 150ms ease-out",
+            }}
+          />
+        </svg>
+        {watchMutation.isPending ? (
+          <IconLoader className="size-4 animate-spin" />
+        ) : (
+          <IconCheck className={`size-4 transition-colors ${holding ? "text-status-completed" : ""}`} />
+        )}
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {hint ? t`Keep holding to mark as watched` : t`Hold to mark as watched`}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -295,6 +424,7 @@ export function TitleCard({
   userStatus,
   episodeProgress,
 }: TitleCardProps) {
+  const [watchedNow, setWatchedNow] = useState(false);
   const {
     ref: tiltRef,
     containerStyle,
@@ -325,9 +455,14 @@ export function TitleCard({
     </motion.div>
   );
 
+  const isWatched = watchedNow || userStatus === "completed";
+
   return (
     <div className="group relative">
-      <QuickAddButton id={id} userStatus={userStatus} />
+      {type === "movie" && !isWatched && (
+        <HoldToWatchButton id={id} onWatched={() => setWatchedNow(true)} />
+      )}
+      <QuickAddButton id={id} userStatus={watchedNow ? "completed" : userStatus} />
       <Link to="/titles/$id" params={{ id }}>
         {cardContent}
       </Link>

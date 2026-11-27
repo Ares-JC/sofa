@@ -4235,3 +4235,11 @@ msgstr "Serie"
 #: apps/web/src/components/title-card.tsx
 msgid "Anime"
 msgstr "Anime"
+
+#: apps/web/src/components/title-card.tsx
+msgid "Hold to mark as watched"
+msgstr "Mantén presionado para marcar como visto"
+
+#: apps/web/src/components/title-card.tsx
+msgid "Keep holding to mark as watched"
+msgstr "Mantén presionado hasta que se llene el círculo"
