@@ -21,8 +21,21 @@ import {
 
 const authLog = createLogger("auth");
 
+/** Extra addresses allowed to sign in, e.g. `TRUSTED_ORIGINS=http://qnap:7340,https://sofa.home`. */
+const EXTRA_TRUSTED_ORIGINS = (process.env.TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 export const auth = betterAuth({
-  trustedOrigins: ["sofa://"],
+  // Besides the configured URL, trust the address the request itself was sent to: a browser
+  // signing in on the same address it loaded Sofa from (LAN IP, Tailscale IP or name) is never
+  // cross-site, and the server's request guard already rejects other origins.
+  trustedOrigins: (request?: Request) => {
+    const origins = ["sofa://", ...EXTRA_TRUSTED_ORIGINS];
+    if (request?.url && URL.canParse(request.url)) origins.push(new URL(request.url).origin);
+    return origins;
+  },
   logger: {
     // Suppress unset secret/low entropy warnings during build
     disabled: process.env.NEXT_PHASE === "phase-production-build",
