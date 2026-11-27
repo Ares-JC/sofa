@@ -99,6 +99,9 @@ export function DiscoverSection() {
     hasNextPage,
     isFetchingNextPage,
     isFetchNextPageError,
+    // Start loading the next page well before the end (about two rows ahead), so new posters
+    // are already there when you scroll down instead of appearing after a pause.
+    rootMargin: "1500px",
   });
 
   const items = useMemo(() => {
