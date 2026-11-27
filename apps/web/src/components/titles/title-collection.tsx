@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { orpc } from "@/lib/orpc/client";
-import { invalidateTrackingQueries } from "@/lib/orpc/invalidate";
+import { invalidateTrackingQueries, patchExploreStatus } from "@/lib/orpc/invalidate";
 import { formatShortDate } from "@sofa/i18n/format";
 
 import { useTitleContext } from "./title-context";
@@ -79,6 +79,8 @@ export function CollectionButton() {
     setOverrides((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, watched])) }));
     try {
       await (watched ? watch : unwatch)({ scope: "movie", ids });
+      // Explore lists aren't refetched on changes; show (or hide) the watched dot there too
+      for (const id of ids) patchExploreStatus(queryClient, id, watched ? "completed" : null);
     } catch {
       setOverrides((prev) => {
         const next = { ...prev };

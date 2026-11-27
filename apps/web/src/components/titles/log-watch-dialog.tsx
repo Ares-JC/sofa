@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getErrorMessage } from "@/lib/error-messages";
 import { orpc } from "@/lib/orpc/client";
-import { invalidateTrackingQueries } from "@/lib/orpc/invalidate";
+import { invalidateTrackingQueries, patchExploreStatus } from "@/lib/orpc/invalidate";
 
 function todayLocal() {
   const now = new Date();
@@ -70,6 +70,8 @@ export function LogWatchDialog({
       onSuccess: async () => {
         toast.success(t`Watch logged`);
         setOpen(false);
+        // Explore lists aren't refetched on changes; show the watched dot there right away
+        if (kind === "movie") patchExploreStatus(queryClient, id, "completed");
         await invalidateTrackingQueries(queryClient);
       },
       onError: (err) => {
