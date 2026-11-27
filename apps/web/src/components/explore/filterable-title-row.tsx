@@ -23,6 +23,7 @@ interface TitleRowItem {
   releaseDate: string | null;
   firstAirDate: string | null;
   voteAverage: number | null;
+  isAnime?: boolean;
 }
 
 type TitleStatus = "in_watchlist" | "watching" | "caught_up" | "completed";
@@ -188,6 +189,7 @@ export function FilterableTitleRow({
                     posterThumbHash={item.posterThumbHash}
                     releaseDate={item.releaseDate ?? item.firstAirDate}
                     voteAverage={item.voteAverage}
+                    isAnime={item.isAnime}
                     userStatus={userStatuses[item.id]}
                     episodeProgress={episodeProgress[item.id]}
                   />

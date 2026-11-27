@@ -550,6 +550,7 @@ export const TmdbBrowseItem = z
     releaseDate: z.string().nullable().describe("Release date (ISO 8601)"),
     firstAirDate: z.string().nullable().describe("First air date (ISO 8601)"),
     voteAverage: z.number().nullable().describe("Average rating (0-10)"),
+    isAnime: z.boolean().optional().describe("Japanese animation (shown as \"Anime\")"),
   })
   .meta({
     id: "BrowseItem",

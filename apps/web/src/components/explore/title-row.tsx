@@ -16,6 +16,7 @@ interface TitleRowItem {
   releaseDate: string | null;
   firstAirDate: string | null;
   voteAverage: number | null;
+  isAnime?: boolean;
 }
 
 interface TitleRowProps {
@@ -82,6 +83,7 @@ export function TitleRow({
                   posterThumbHash={item.posterThumbHash}
                   releaseDate={item.releaseDate ?? item.firstAirDate}
                   voteAverage={item.voteAverage}
+                  isAnime={item.isAnime}
                   userStatus={userStatuses?.[item.id]}
                   episodeProgress={episodeProgress?.[item.id]}
                 />

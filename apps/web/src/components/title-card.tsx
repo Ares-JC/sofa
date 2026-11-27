@@ -50,6 +50,8 @@ interface CardInnerProps {
   posterThumbHash?: string | null;
   releaseDate?: string | null;
   voteAverage?: number | null;
+  /** Japanese animation: labelled "Anime" instead of "Series"/"Movie". */
+  isAnime?: boolean;
   userStatus?: TitleStatus | null;
   episodeProgress?: { watched: number; total: number } | null;
   tiltStyles?: TiltStyles;
@@ -168,11 +170,14 @@ function CardInner({
   posterThumbHash,
   releaseDate,
   voteAverage,
+  isAnime,
   userStatus,
   episodeProgress,
   tiltStyles,
 }: CardInnerProps) {
+  const { t } = useLingui();
   const statusConfig = useStatusConfig();
+  const typeLabel = isAnime ? t`Anime` : type === "movie" ? t`Movie` : t`Series`;
   const year = releaseDate?.slice(0, 4);
   const TypeIcon = type === "movie" ? IconMovie : IconDeviceTv;
   const placeholderUrl = thumbHashToUrl(posterThumbHash);
@@ -256,8 +261,11 @@ function CardInner({
           )}
           <p className="line-clamp-1 text-sm leading-snug font-medium">{title}</p>
         </div>
-        <div className="text-muted-foreground mt-1.5 flex items-center gap-2 text-xs">
-          <TypeIcon aria-hidden={true} className="text-primary/60 size-3.5 shrink-0" />
+        <div className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-xs">
+          <span className="border-primary/25 bg-primary/10 text-primary inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-px text-[10px] font-medium tracking-wide uppercase">
+            <TypeIcon aria-hidden={true} className="size-3" />
+            {typeLabel}
+          </span>
           {year && <span>{year}</span>}
           {voteAverage != null && voteAverage > 0 && (
             <span className="text-primary/80 ml-auto flex items-center gap-0.5">
@@ -283,6 +291,7 @@ export function TitleCard({
   posterThumbHash,
   releaseDate,
   voteAverage,
+  isAnime,
   userStatus,
   episodeProgress,
 }: TitleCardProps) {
@@ -304,6 +313,7 @@ export function TitleCard({
         posterThumbHash={posterThumbHash}
         releaseDate={releaseDate}
         voteAverage={voteAverage}
+        isAnime={isAnime}
         userStatus={userStatus}
         episodeProgress={episodeProgress}
         tiltStyles={{

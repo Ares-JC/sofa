@@ -4227,3 +4227,11 @@ msgstr ""
 #: apps/web/src/components/command-palette.tsx
 msgid "Clear search"
 msgstr ""
+
+#: apps/web/src/components/title-card.tsx
+msgid "Series"
+msgstr ""
+
+#: apps/web/src/components/title-card.tsx
+msgid "Anime"
+msgstr ""

@@ -63,7 +63,18 @@ export type TmdbListResult = {
   first_air_date?: string;
   popularity?: number;
   vote_average?: number;
+  genre_ids?: number[];
+  original_language?: string;
+  origin_country?: string[];
 };
+
+const ANIMATION_GENRE_ID = 16;
+
+/** Japanese animation: TMDB's Animation genre plus Japanese origin. */
+export function isAnime(r: Pick<TmdbListResult, "genre_ids" | "original_language" | "origin_country">) {
+  if (!r.genre_ids?.includes(ANIMATION_GENRE_ID)) return false;
+  return r.original_language === "ja" || (r.origin_country ?? []).includes("JP");
+}
 
 type TmdbPage = {
   page?: number;
@@ -80,6 +91,7 @@ type BrowseItem = {
   releaseDate: string | null;
   firstAirDate: string | null;
   voteAverage: number | null;
+  isAnime?: boolean;
 };
 
 type DiscoverFilters = z.infer<typeof DiscoverInput>;
@@ -118,6 +130,7 @@ export function toBrowseItem(r: TmdbListResult, type: MediaType): BrowseItem {
     releaseDate: r.release_date ?? null,
     firstAirDate: r.first_air_date ?? null,
     voteAverage: r.vote_average ?? null,
+    isAnime: isAnime(r),
   };
 }
 
